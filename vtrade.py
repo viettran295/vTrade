@@ -94,6 +94,5 @@ class vTrade():
                                 "xanchor": "center",
                                 "x": 0.5},
                           xaxis=dict(title="Date"),
-                          yaxis=dict(title="$ USD"),
-                          xanchor=dict())
+                          yaxis=dict(title="$ USD"))
         fig.show()
