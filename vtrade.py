@@ -10,6 +10,7 @@ class vTrade():
 
     fig = go.Figure()
     fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
+    MA_types = ["SMA", "EWM"]
 
     def __init__(self) -> None:
         self.end_date = date.today() - timedelta(days=1)
@@ -68,18 +69,24 @@ class vTrade():
                     return True
         return False
 
-    def show_MA(self, df: pl.DataFrame, MA_types: list[str]):
+    @staticmethod
+    def _get_fullname_cols(type_names: list[str], col_names: list[str]) -> list[str]:
+        """
+        e.g return detail name like EWM_20 from columns of dataframe 
+        """
+        res_cols = []
+        for type_name in type_names:
+            for col in col_names:
+                if type_name in col:
+                    res_cols.append(col)
+        return res_cols
+
+
+    def show_MA(self, df: pl.DataFrame):
         if not vTrade._check_listSubstr_in_Str(self.columns, df.columns): 
             return
         
-        if isinstance(MA_types, str):
-            MA_types = [MA_types]
-        
-        visualize_cols = []
-        for ma_type in MA_types:
-            for col in df.columns:
-                if ma_type in col:
-                    visualize_cols.append(col)
+        visualize_cols = self._get_fullname_cols(self.MA_types, df.columns)
         
         if len(visualize_cols) <= 0:
             return
