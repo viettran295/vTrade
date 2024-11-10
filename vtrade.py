@@ -7,6 +7,10 @@ import polars as pl
 import plotly.graph_objects as go
 
 class vTrade():
+
+    fig = go.Figure()
+    fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
+
     def __init__(self) -> None:
         self.end_date = date.today() - timedelta(days=1)
         self.start_date = self.end_date - timedelta(days=365*3)
@@ -80,19 +84,16 @@ class vTrade():
         if len(visualize_cols) <= 0:
             return
         
-        fig = go.Figure(data=go.Candlestick(x=df["datetime"],
-                                    open=df["open"],
-                                    close=df["close"],
-                                    high=df["high"],
-                                    low=df["low"]))
+        self.fig.add_trace(go.Bar(x=df["datetime"], y=df["high"]))
+
         for ma_type in visualize_cols:
-            fig.add_trace(go.Line(x=df["datetime"],
+            self.fig.add_trace(go.Line(x=df["datetime"],
                                     y=df[f"{ma_type}"],
                                     name=f"{ma_type}"))
             
-        fig.update_layout(title={"text": "Stock price",
+        self.fig.update_layout(title={"text": "Stock price",
                                 "xanchor": "center",
                                 "x": 0.5},
                           xaxis=dict(title="Date"),
                           yaxis=dict(title="$ USD"))
-        fig.show()
+        self.fig.show()
