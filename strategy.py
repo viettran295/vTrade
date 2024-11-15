@@ -31,8 +31,8 @@ class Strategy(vTrade):
             logger.debug("Dataframe columns do not contain MA types")
             df = self.calc_crossing_MA(df, short_MA, long_MA)
 
-        signal_1 = df.filter(df[self.sell_buy_sig] == 1)
-        signal_0 = df.filter(df[self.sell_buy_sig] == 0)
+        signal_buy = df.filter(df[self.sell_buy_sig] == 1)
+        signal_sell = df.filter(df[self.sell_buy_sig] == 0)
         
         self.fig.add_trace(go.Bar(x=df["datetime"], y=df["high"]))
 
@@ -41,13 +41,13 @@ class Strategy(vTrade):
                                     y=df[f"{ma_type}"],
                                     name=f"{ma_type}"))
             
-        self.fig.add_trace(go.Scatter(x=signal_1["datetime"],
-                                y=signal_1[short_MA], mode="markers",
+        self.fig.add_trace(go.Scatter(x=signal_buy["datetime"],
+                                y=signal_buy[short_MA], mode="markers",
                                 marker=dict(size=9, symbol="triangle-up",
                                             color="green")))
 
-        self.fig.add_trace(go.Scatter(x=signal_0["datetime"],
-                                y=signal_0[short_MA], mode="markers",
+        self.fig.add_trace(go.Scatter(x=signal_sell["datetime"],
+                                y=signal_sell[short_MA], mode="markers",
                                 marker=dict(size=9, symbol="triangle-down",
                                             color="red")))
 
