@@ -52,3 +52,36 @@ class Strategy(vTrade):
                                             color="red")))
 
         self.fig.show()
+    
+    def calc_RSI(self, df: pl.DataFrame, period=14) -> pl.DataFrame:
+        if "close" not in df.columns:
+            logger.error("Dataframe does not contain 'close' column")
+            return None
+        try:
+            # Calculate difference between previous day
+            df_rsi =  df.with_columns(
+                (pl.col("close") - pl.col("close").shift(1)).alias("delta")
+            )
+            # Calculate gain and loss
+            df_rsi = df_rsi.with_columns(
+                pl.when(pl.col("delta") > 0).then(pl.col("delta")).otherwise(0).alias("gain"),
+                pl.when(pl.col("delta") < 0).then(-pl.col("delta")).otherwise(0).alias("loss")
+            )
+            # Calculate average gains and losses over a rolling window
+            df_rsi = df_rsi.with_columns(
+                pl.col("gain").rolling_mean(window_size=period, min_periods=1).alias("avg_gain"),
+                pl.col("loss").rolling_mean(window_size=period, min_periods=1).alias("avg_loss")
+            )
+            # Calculate RS and RSI
+            df_rsi = df_rsi.with_columns(
+                (pl.col("avg_gain") / pl.col("avg_loss")).alias("RS"),
+            )
+            df_rsi = df_rsi.with_columns(
+                (100 - (100 / (1 + pl.col("RS")))).alias("RSI")
+            )
+            logger.info("Calculated RSI")
+            return df_rsi
+        except Exception as e:
+            print(e)
+            logger.error("Error while calculating RSI: ", e)
+            return None
