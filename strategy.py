@@ -85,3 +85,25 @@ class Strategy(vTrade):
             print(e)
             logger.error("Error while calculating RSI: ", e)
             return None
+        
+    def show_RSI(self, df_rsi: pl.DataFrame, upper_bound=80, lower_bound=20):
+        if not self._check_listSubstr_in_Str(["RSI", "datetime"], df_rsi.columns):
+            logger.debug("Dataframe columns do not contain RSI")
+            df_rsi = self.calc_RSI(df_rsi)
+        self.fig.data = []
+        self.fig.add_trace(go.Line(y=df_rsi["RSI"], x=df_rsi["datetime"], name="RSI"))
+        
+        self.fig.add_hline(y=upper_bound, line_dash="dash", line_color="red")
+        self.fig.add_hline(y=lower_bound, line_dash="dash", line_color="red")
+
+        overbougt = df_rsi.filter(pl.col("RSI") > upper_bound)
+        oversold = df_rsi.filter(pl.col("RSI") < lower_bound)
+        self.fig.add_trace(go.Scatter(y=overbougt["RSI"], x=overbougt["datetime"], 
+                                      mode="markers", marker=dict(color='red'), name="Over bought"))
+        self.fig.add_trace(go.Scatter(y=oversold["RSI"], x=oversold["datetime"], 
+                                      mode="markers", marker=dict(color="green"), name="Over sold"))
+
+        self.fig.update_layout(
+                    title='Relative strength index (RSI) plot',
+                )
+        self.fig.show()
