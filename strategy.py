@@ -7,6 +7,10 @@ class Strategy(vTrade):
     def __init__(self) -> None:
         super().__init__()
         self.sell_buy_sig = "Signal"
+        self.signal = {
+            "buy": 1,
+            "sell": 0
+        }
 
     def calc_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str) -> pl.DataFrame:
         if df is not None:
@@ -15,10 +19,10 @@ class Strategy(vTrade):
                     df = df.with_columns([
                         # Short MA crossing over long MA -> buying point
                         pl.when((pl.col(short_MA) > pl.col(long_MA)) & (pl.col(short_MA).shift(1) <= pl.col(long_MA).shift(1)))
-                        .then(1)
+                        .then(self.signal["buy"])
                         # Short MA crossing down long MA -> selling point
                         .when((pl.col(short_MA) < pl.col(long_MA)) & (pl.col(short_MA).shift(1) >= pl.col(long_MA).shift(1)))
-                        .then(0)
+                        .then(self.signal["sell"])
                         .otherwise(None)
                         .alias(self.sell_buy_sig)
                     ])
