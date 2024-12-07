@@ -35,22 +35,41 @@ class Strategy(vTrade):
         signal_sell = df.filter(df[self.sell_buy_sig] == 0)
         
         self.fig.data = []
-        self.fig.add_trace(go.Bar(x=df["datetime"], y=df["high"], name="Price"))
+        self.fig.add_trace(go.Bar(
+                                x=df["datetime"], 
+                                y=df["high"], 
+                                name="Price",
+                                marker=dict(color='white')
+                            )
+            )
 
         for ma_type in [short_MA, long_MA]:
-            self.fig.add_trace(go.Line(x=df["datetime"],
+            self.fig.add_trace(go.Line(
+                                    x=df["datetime"],
                                     y=df[f"{ma_type}"],
-                                    name=f"{ma_type}"))
+                                    name=f"{ma_type}"
+                                )
+                )
             
-        self.fig.add_trace(go.Scatter(x=signal_buy["datetime"],
+        self.fig.add_trace(go.Scatter(
+                                x=signal_buy["datetime"],
                                 y=signal_buy[short_MA], mode="markers",
-                                marker=dict(size=9, symbol="triangle-up",
-                                            color="green"), name="Buying signal"))
+                                marker=dict(size=9, 
+                                            symbol="triangle-up",
+                                            color="green"), 
+                                name="Buying signal"
+                            )
+            )
 
-        self.fig.add_trace(go.Scatter(x=signal_sell["datetime"],
+        self.fig.add_trace(go.Scatter(
+                                x=signal_sell["datetime"],
                                 y=signal_sell[short_MA], mode="markers",
                                 marker=dict(size=9, symbol="triangle-down",
-                                            color="red"), name="Selling signal"))
+                                            color="red"), 
+                                name="Selling signal"
+                            )
+            )
+        
         self.fig.update_layout(
                     title={"text": "Crossing MA",
                             "xanchor": "center",

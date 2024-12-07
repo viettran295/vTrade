@@ -91,7 +91,14 @@ class vTrade():
         if len(visualize_cols) <= 0:
             return
         
-        self.fig.add_trace(go.Bar(x=df["datetime"], y=df["high"], name="Price"))
+        self.fig.data = []
+        self.fig.add_trace(go.Bar(
+                                x=df["datetime"], 
+                                y=df["high"], 
+                                name="Price",
+                                marker=dict(color='white')
+                            )
+        )
 
         for ma_type in visualize_cols:
             self.fig.add_trace(go.Line(x=df["datetime"],
