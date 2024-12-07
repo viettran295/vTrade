@@ -9,27 +9,37 @@ class Strategy(vTrade):
         self.sell_buy_sig = "Signal"
 
     def calc_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str) -> pl.DataFrame:
-        try:
-            df = df.with_columns([
-                # Short MA crossing over long MA -> buying point
-                pl.when((pl.col(short_MA) > pl.col(long_MA)) & (pl.col(short_MA).shift(1) <= pl.col(long_MA).shift(1)))
-                .then(1)
-                # Short MA crossing down long MA -> selling point
-                .when((pl.col(short_MA) < pl.col(long_MA)) & (pl.col(short_MA).shift(1) >= pl.col(long_MA).shift(1)))
-                .then(0)
-                .otherwise(None)
-                .alias(self.sell_buy_sig)
-            ])
-            logger.info("Calculated crossing MA points")
-            return df
-        except Exception as e:
-            logger.error("Error while implementing Cross MA")
-            return
+        if df is not None:
+            if short_MA in df and long_MA in df:
+                try:
+                    df = df.with_columns([
+                        # Short MA crossing over long MA -> buying point
+                        pl.when((pl.col(short_MA) > pl.col(long_MA)) & (pl.col(short_MA).shift(1) <= pl.col(long_MA).shift(1)))
+                        .then(1)
+                        # Short MA crossing down long MA -> selling point
+                        .when((pl.col(short_MA) < pl.col(long_MA)) & (pl.col(short_MA).shift(1) >= pl.col(long_MA).shift(1)))
+                        .then(0)
+                        .otherwise(None)
+                        .alias(self.sell_buy_sig)
+                    ])
+                    logger.info("Calculated crossing MA points")
+                    return df
+                except Exception as e:
+                    logger.error("Error while implementing Cross MA")
+                    return
+            else:
+                logger.error(f"{short_MA} or {long_MA} not in Dataframe")
+        else:
+            logger.error(f"{df} is None")
     
     def show_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str):
-        if not self._check_listSubstr_in_Str([short_MA, long_MA], df.columns):
-            logger.debug("Dataframe columns do not contain MA types")
-            df = self.calc_crossing_MA(df, short_MA, long_MA)
+        if df is not None:
+            if short_MA not in df and long_MA not in df:
+                logger.debug("Dataframe columns do not contain MA types")
+                df = self.calc_crossing_MA(df, short_MA, long_MA)
+        else:
+            logger.error(f"Dataframe is None")
+            return
 
         signal_buy = df.filter(df[self.sell_buy_sig] == 1)
         signal_sell = df.filter(df[self.sell_buy_sig] == 0)
