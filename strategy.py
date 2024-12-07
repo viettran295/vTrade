@@ -27,6 +27,7 @@ class Strategy(vTrade):
                         .alias(self.sell_buy_sig)
                     ])
                     logger.info("Calculated crossing MA points")
+                    logger.info("Sell-buy signal fo crossing MA is generated")
                     return df
                 except Exception as e:
                     logger.error("Error while implementing Cross MA")
@@ -91,33 +92,51 @@ class Strategy(vTrade):
                 )
         self.fig.show()
     
-    def calc_RSI(self, df: pl.DataFrame, period=14) -> pl.DataFrame:
+    def calc_RSI(
+            self, 
+            df: pl.DataFrame, 
+            upper_bound: int = 80, 
+            lower_bound: int = 20, 
+            period: int = 14
+        ) -> pl.DataFrame:
+
         if "close" not in df.columns:
             logger.error("Dataframe does not contain 'close' column")
             return None
+        
         try:
+            rsi = RSI()
             # Calculate difference between previous day
             df_rsi =  df.with_columns(
-                (pl.col("close") - pl.col("close").shift(1)).alias("delta")
+                (pl.col("close") - pl.col("close").shift(1)).alias(rsi.delta)
             )
             # Calculate gain and loss
             df_rsi = df_rsi.with_columns(
-                pl.when(pl.col("delta") > 0).then(pl.col("delta")).otherwise(0).alias("gain"),
-                pl.when(pl.col("delta") < 0).then(-pl.col("delta")).otherwise(0).alias("loss")
+                pl.when(pl.col(rsi.delta) > 0).then(pl.col(rsi.delta)).otherwise(0).alias(rsi.gain),
+                pl.when(pl.col(rsi.delta) < 0).then(-pl.col(rsi.delta)).otherwise(0).alias(rsi.loss)
             )
             # Calculate average gains and losses over a rolling window
             df_rsi = df_rsi.with_columns(
-                pl.col("gain").rolling_mean(window_size=period, min_periods=1).alias("avg_gain"),
-                pl.col("loss").rolling_mean(window_size=period, min_periods=1).alias("avg_loss")
+                pl.col(rsi.gain).rolling_mean(window_size=period, min_periods=1).alias(rsi.avg_gain),
+                pl.col(rsi.loss).rolling_mean(window_size=period, min_periods=1).alias(rsi.avg_loss)
             )
             # Calculate RS and RSI
             df_rsi = df_rsi.with_columns(
-                (pl.col("avg_gain") / pl.col("avg_loss")).alias("RS"),
+                (pl.col(rsi.avg_gain) / pl.col(rsi.avg_loss)).alias(rsi.RS),
             )
             df_rsi = df_rsi.with_columns(
-                (100 - (100 / (1 + pl.col("RS")))).alias("RSI")
+                (100 - (100 / (1 + pl.col(rsi.RS)))).alias(rsi.RSI)
             )
             logger.info("Calculated RSI")
+
+            # Calculate signal
+            df_rsi = df_rsi.with_columns(
+                pl.when(pl.col(rsi.RSI) > upper_bound).then(self.signal["sell"])
+                .when(pl.col(rsi.RSI) < lower_bound).then(self.signal["buy"])
+                .otherwise(None)
+                .alias(self.sell_buy_sig)
+            )
+            logger.info("Sell-buy signal for RSI is generated")
             return df_rsi
         except Exception as e:
             print(e)
@@ -147,3 +166,13 @@ class Strategy(vTrade):
                             "x": 0.5},
                 )
         self.fig.show()
+    
+class RSI():
+    def __init__(self) -> None:
+        self.delta = "delta"
+        self.gain = "gain"
+        self.loss = "loss"
+        self.avg_gain = "avg_gain"
+        self.avg_loss = "avg_loss"
+        self.RS = "RS"
+        self.RSI = "RSI"
