@@ -5,6 +5,7 @@ import requests
 from datetime import date, timedelta
 import polars as pl 
 import plotly.graph_objects as go
+from loguru import logger
 
 class vTrade():
 
@@ -22,7 +23,7 @@ class vTrade():
         if end_date is None:
             end_date = self.end_date
         if start_date is None:
-            start_date = end_date - timedelta(days=365*3)
+            start_date = self.start_date
         url = f"https://api.twelvedata.com/time_series?symbol={symbol}&interval={interval}&start_date={start_date}&end_date={end_date}&apikey={self.api_key}"
         resp = requests.get(url)
         resp.raise_for_status()
@@ -39,26 +40,29 @@ class vTrade():
         else:
             return None
 
-    def calc_MA(self, symbol, MA1, MA2, MA_type="SMA", df=None) -> pl.DataFrame:
+    def calc_MA(self, symbol, short_ma: str, long_ma: str, df=None) -> pl.DataFrame:
         if df is None:
             df = self.get_stock_data(symbol)
         
-        if isinstance(MA_type, str):
-            # Convert string to list
-            MA_type = [MA_type]
+        short_ma_nr = int(short_ma.split("_")[-1])
+        long_ma_nr = int(long_ma.split("_")[-1])
 
-        for ma_type in MA_type:
-            if ma_type == "SMA":
-                df = df.with_columns(
-                    pl.col("high").rolling_mean(window_size=MA1).alias(f"SMA_{MA1}"),
-                    pl.col("high").rolling_mean(window_size=MA2).alias(f"SMA_{MA2}")
-                )
-            if ma_type == "EWM":
+        if "SMA" in short_ma and "SMA" in long_ma:
+            df = df.with_columns(
+                pl.col("high").rolling_mean(window_size=short_ma_nr).alias(short_ma),
+                pl.col("high").rolling_mean(window_size=long_ma_nr).alias(long_ma)
+            )
+            logger.info("SMA is calculated")
+        elif "EWM" in short_ma and "EWM" in long_ma:
             # Exponentially weighted moving average
-                df = df.with_columns(
-                    pl.col("high").ewm_mean(span=MA1).alias(f"EWM_{MA1}"),
-                    pl.col("high").ewm_mean(span=MA2).alias(f"EWM_{MA2}")
+            df = df.with_columns(
+                    pl.col("high").ewm_mean(span=short_ma_nr).alias(short_ma),
+                    pl.col("high").ewm_mean(span=long_ma_nr).alias(long_ma)
                 )
+            logger.info("EWM is calculated")
+        else:
+            logger.error("MA types are not valid")
+            return
         return df
     
     @staticmethod
