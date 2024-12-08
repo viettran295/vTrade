@@ -2,6 +2,7 @@ from vtrade import vTrade
 import polars as pl
 from loguru import logger
 import plotly.graph_objects as go
+import time
 
 class Strategy(vTrade):
     def __init__(self) -> None:
@@ -16,6 +17,7 @@ class Strategy(vTrade):
         if df is not None:
             if short_MA in df and long_MA in df:
                 try:
+                    start = time.time()
                     df = df.with_columns([
                         # Short MA crossing over long MA -> buying point
                         pl.when((pl.col(short_MA) > pl.col(long_MA)) & (pl.col(short_MA).shift(1) <= pl.col(long_MA).shift(1)))
@@ -26,7 +28,10 @@ class Strategy(vTrade):
                         .otherwise(None)
                         .alias(self.sell_buy_sig)
                     ])
+                    end = time.time()
+                    exec_time = end - start
                     logger.info("Calculated crossing MA points")
+                    logger.info(f"Calculation took {exec_time}s")
                     logger.info("Sell-buy signal fo crossing MA is generated")
                     return df
                 except Exception as e:
@@ -105,6 +110,7 @@ class Strategy(vTrade):
             return None
         
         try:
+            start = time.time()
             rsi = RSI()
             # Calculate difference between previous day
             df_rsi =  df.with_columns(
@@ -127,7 +133,10 @@ class Strategy(vTrade):
             df_rsi = df_rsi.with_columns(
                 (100 - (100 / (1 + pl.col(rsi.RS)))).alias(rsi.RSI)
             )
+            end = time.time()
+            exec_time = end - start
             logger.info("Calculated RSI")
+            logger.info(f"Calculation took {exec_time}s")
 
             # Calculate signal
             df_rsi = df_rsi.with_columns(
