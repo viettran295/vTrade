@@ -30,7 +30,7 @@ class vTrade():
         resp.raise_for_status()
         data = resp.json()
         # Add data to DataFrame
-        if data["values"]:
+        if "values" in data:
             df = pl.DataFrame(data['values'])
             df = df.with_columns(
                 pl.col(df.columns[0]).str.strptime(pl.Datetime).cast(pl.Date),
@@ -41,7 +41,7 @@ class vTrade():
         else:
             return None
 
-    def calc_MA(self, symbol, short_ma: str, long_ma: str, df=None) -> pl.DataFrame:
+    def calc_MA(self, symbol: str, short_ma: str, long_ma: str, df: pl.DataFrame = None) -> pl.DataFrame:
         if df is None:
             df = self.get_stock_data(symbol)
         

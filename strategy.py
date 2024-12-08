@@ -40,7 +40,7 @@ class Strategy(vTrade):
             else:
                 logger.error(f"{short_MA} or {long_MA} not in Dataframe")
         else:
-            logger.error(f"{df} is None")
+            logger.error("DataFrame is None")
     
     def show_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str):
         if df is not None:
@@ -48,7 +48,7 @@ class Strategy(vTrade):
                 logger.debug("Dataframe columns do not contain MA types")
                 df = self.calc_crossing_MA(df, short_MA, long_MA)
         else:
-            logger.error(f"Dataframe is None")
+            logger.error(f"Dataframe for MA calculation is None")
             return
 
         signal_buy = df.filter(df[self.sell_buy_sig] == 1)
