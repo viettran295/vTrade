@@ -48,29 +48,30 @@ class vTrade():
         short_ma_nr = int(short_ma.split("_")[-1])
         long_ma_nr = int(long_ma.split("_")[-1])
 
-        if "SMA" in short_ma and "SMA" in long_ma:
-            start = time.time()
-            df = df.with_columns(
-                pl.col("high").rolling_mean(window_size=short_ma_nr).alias(short_ma),
-                pl.col("high").rolling_mean(window_size=long_ma_nr).alias(long_ma)
-            )
-            end = time.time()
-            exec_time = end - start
-            logger.info("SMA is calculated")
-            logger.info(f"Calculation took {exec_time}s")
-        elif "EWM" in short_ma and "EWM" in long_ma:
-            start = time.time()
-            # Exponentially weighted moving average
-            df = df.with_columns(
-                    pl.col("high").ewm_mean(span=short_ma_nr).alias(short_ma),
-                    pl.col("high").ewm_mean(span=long_ma_nr).alias(long_ma)
+        try:
+            if "SMA" in short_ma and "SMA" in long_ma:
+                start = time.time()
+                df = df.with_columns(
+                    pl.col("high").rolling_mean(window_size=short_ma_nr).alias(short_ma),
+                    pl.col("high").rolling_mean(window_size=long_ma_nr).alias(long_ma)
                 )
-            end = time.time()
-            exec_time = end - start
-            logger.info("EWM is calculated")
-            logger.info(f"Calculation took {exec_time}s")
-        else:
-            logger.error("MA types are not valid")
+                end = time.time()
+                exec_time = end - start
+                logger.info(f"{symbol} SMA is calculated")
+                logger.info(f"Calculation took {exec_time}s")
+            elif "EWM" in short_ma and "EWM" in long_ma:
+                start = time.time()
+                # Exponentially weighted moving average
+                df = df.with_columns(
+                        pl.col("high").ewm_mean(span=short_ma_nr).alias(short_ma),
+                        pl.col("high").ewm_mean(span=long_ma_nr).alias(long_ma)
+                    )
+                end = time.time()
+                exec_time = end - start
+                logger.info(f"{symbol} EWM is calculated")
+                logger.info(f"Calculation took {exec_time}s")
+        except Exception as e:
+            logger.error(f"Error while calculating {symbol} MA  --> {e}")
             return
         return df
     
