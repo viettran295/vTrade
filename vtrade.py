@@ -6,7 +6,7 @@ from datetime import date, timedelta
 import polars as pl 
 import plotly.graph_objects as go
 from loguru import logger
-import time
+from utils import log_exectime
 
 class vTrade():
 
@@ -41,6 +41,7 @@ class vTrade():
         else:
             return None
 
+    @log_exectime
     def calc_MA(self, symbol: str, short_ma: str, long_ma: str, df: pl.DataFrame = None) -> pl.DataFrame:
         if df is None:
             df = self.get_stock_data(symbol)
@@ -50,26 +51,18 @@ class vTrade():
 
         try:
             if "SMA" in short_ma and "SMA" in long_ma:
-                start = time.time()
                 df = df.with_columns(
                     pl.col("high").rolling_mean(window_size=short_ma_nr).alias(short_ma),
                     pl.col("high").rolling_mean(window_size=long_ma_nr).alias(long_ma)
                 )
-                end = time.time()
-                exec_time = end - start
                 logger.info(f"{symbol} SMA is calculated")
-                logger.info(f"Calculation took {exec_time}s")
             elif "EWM" in short_ma and "EWM" in long_ma:
-                start = time.time()
                 # Exponentially weighted moving average
                 df = df.with_columns(
                         pl.col("high").ewm_mean(span=short_ma_nr).alias(short_ma),
                         pl.col("high").ewm_mean(span=long_ma_nr).alias(long_ma)
                     )
-                end = time.time()
-                exec_time = end - start
                 logger.info(f"{symbol} EWM is calculated")
-                logger.info(f"Calculation took {exec_time}s")
         except Exception as e:
             logger.error(f"Error while calculating {symbol} MA  --> {e}")
             return
