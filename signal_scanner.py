@@ -55,6 +55,22 @@ class SignalScanner(Strategy):
                 buy_sig, sell_sig = self.signal_regconize(df_ma)
                 self.signals[stock]["buy"] = buy_sig
                 self.signals[stock]["sell"] = sell_sig
+        logger.warning("Finish scanning MA signals")
+        self.__show_signals()
+    
+    def scan_RSI(self):
+        for stock in self.stocks_list:
+            df = self.get_stock_data(stock)
+            df = self.calc_RSI(df)
+            if df is not None and self.sell_buy_sig in df:
+                buy_sig, sell_sig = self.signal_regconize(df)
+                self.signals[stock]["buy"] = buy_sig
+                self.signals[stock]["sell"] = sell_sig
+        logger.warning("Finish scanning RSI signals")
+        self.__show_signals()
+
+    def __show_signals(self):
+        logger.warning("============ Sell-buy signals ============")
         for stock in self.stocks_list:
             if self.signals[stock]["buy"]:
                 logger.info(f"{stock} buy signals: {self.signals[stock]['buy']}")
@@ -62,3 +78,4 @@ class SignalScanner(Strategy):
                 logger.info(f"{stock} sell signals: {self.signals[stock]['sell']}")
             else:
                 logger.info(f"There is no sell-buy signal for {stock}")
+        logger.warning("========================================== \n")
