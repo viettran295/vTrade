@@ -10,6 +10,13 @@ class SignalScanner(Strategy):
         self.day_to_scan = day_to_scan
         self.short_MA = "SMA_20"
         self.long_MA = "SMA_100"
+        self.signals = {
+            s: {
+                "buy": None,
+                "sell": None
+            }
+            for s in self.stocks_list
+        }
 
     def set_stocks_to_scan(self, stocks_list: List[str]):
         for s in stocks_list:
@@ -41,24 +48,17 @@ class SignalScanner(Strategy):
         return buy_signals, sell_signals
         
     def scan_MA(self):
-        signals = {
-            s: {
-                "buy": None,
-                "sell": None
-            }
-            for s in self.stocks_list
-        }
         for stock in self.stocks_list:
             df = self.calc_MA(stock, self.short_MA, self.long_MA)
             df_ma = self.calc_crossing_MA(df, self.short_MA, self.long_MA)
             if df_ma is not None and self.sell_buy_sig in df_ma:
                 buy_sig, sell_sig = self.signal_regconize(df_ma)
-                signals[stock]["buy"] = buy_sig
-                signals[stock]["sell"] = sell_sig
+                self.signals[stock]["buy"] = buy_sig
+                self.signals[stock]["sell"] = sell_sig
         for stock in self.stocks_list:
-            if signals[stock]["buy"]:
-                logger.info(f"{stock} buy signals: {signals[stock]['buy']}")
-            elif signals[stock]["sell"]:
-                logger.info(f"{stock} sell signals: {signals[stock]['sell']}")
+            if self.signals[stock]["buy"]:
+                logger.info(f"{stock} buy signals: {self.signals[stock]['buy']}")
+            elif self.signals[stock]["sell"]:
+                logger.info(f"{stock} sell signals: {self.signals[stock]['sell']}")
             else:
                 logger.info(f"There is no sell-buy signal for {stock}")
