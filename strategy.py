@@ -101,10 +101,10 @@ class Strategy(vTrade):
             upper_bound: int = 80, 
             lower_bound: int = 20, 
             period: int = 14
-        ) -> pl.DataFrame:
+        ) -> pl.DataFrame:    
 
-        if "close" not in df.columns:
-            logger.error("Dataframe does not contain 'close' column")
+        if df is None or "close" not in df.columns:
+            logger.error("Invalid DataFrame")
             return None
         
         try:
