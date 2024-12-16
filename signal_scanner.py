@@ -31,8 +31,30 @@ class SignalScanner(Strategy):
             self.long_MA = long_MA
         else:
             logger.error("Invalid moving average type")
+        
+    def scan_MA(self):
+        for stock in self.stocks_list:
+            df = self.calc_MA(stock, self.short_MA, self.long_MA)
+            df_ma = self.calc_crossing_MA(df, self.short_MA, self.long_MA)
+            if df_ma is not None and self.sell_buy_sig in df_ma:
+                buy_sig, sell_sig = self.__signal_regconize(df_ma)
+                self.signals[stock]["buy"] = buy_sig
+                self.signals[stock]["sell"] = sell_sig
+        logger.warning("Finish scanning MA signals")
+        self.__show_signals()
+    
+    def scan_RSI(self):
+        for stock in self.stocks_list:
+            df = self.get_stock_data(stock)
+            df = self.calc_RSI(df)
+            if df is not None and self.sell_buy_sig in df:
+                buy_sig, sell_sig = self.__signal_regconize(df)
+                self.signals[stock]["buy"] = buy_sig
+                self.signals[stock]["sell"] = sell_sig
+        logger.warning("Finish scanning RSI signals")
+        self.__show_signals()
 
-    def signal_regconize(self, df: pl.DataFrame):
+    def __signal_regconize(self, df: pl.DataFrame):
         if df is None:
             return
         
@@ -46,29 +68,7 @@ class SignalScanner(Strategy):
                 sell_signals.append((sig["datetime"], sig["close"], sig["Signal"]))
         logger.info("Recognized sell-buy signal")
         return buy_signals, sell_signals
-        
-    def scan_MA(self):
-        for stock in self.stocks_list:
-            df = self.calc_MA(stock, self.short_MA, self.long_MA)
-            df_ma = self.calc_crossing_MA(df, self.short_MA, self.long_MA)
-            if df_ma is not None and self.sell_buy_sig in df_ma:
-                buy_sig, sell_sig = self.signal_regconize(df_ma)
-                self.signals[stock]["buy"] = buy_sig
-                self.signals[stock]["sell"] = sell_sig
-        logger.warning("Finish scanning MA signals")
-        self.__show_signals()
     
-    def scan_RSI(self):
-        for stock in self.stocks_list:
-            df = self.get_stock_data(stock)
-            df = self.calc_RSI(df)
-            if df is not None and self.sell_buy_sig in df:
-                buy_sig, sell_sig = self.signal_regconize(df)
-                self.signals[stock]["buy"] = buy_sig
-                self.signals[stock]["sell"] = sell_sig
-        logger.warning("Finish scanning RSI signals")
-        self.__show_signals()
-
     def __show_signals(self):
         logger.warning("============ Sell-buy signals ============")
         for stock in self.stocks_list:
