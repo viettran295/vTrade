@@ -42,29 +42,27 @@ class vTrade():
             return None
 
     @log_exectime
-    def calc_MA(self, symbol: str, short_ma: str, long_ma: str, df: pl.DataFrame = None) -> pl.DataFrame:
+    def calc_MA(self, df: pl.DataFrame, MA_length: str) -> pl.DataFrame:
         if df is None:
-            df = self.get_stock_data(symbol)
+            logger.error("DataFrame is None")
+            return 
         
-        short_ma_nr = int(short_ma.split("_")[-1])
-        long_ma_nr = int(long_ma.split("_")[-1])
+        length = int(MA_length.split("_")[-1])
 
         try:
-            if "SMA" in short_ma and "SMA" in long_ma:
+            if "SMA" in MA_length:
                 df = df.with_columns(
-                    pl.col("high").rolling_mean(window_size=short_ma_nr).alias(short_ma),
-                    pl.col("high").rolling_mean(window_size=long_ma_nr).alias(long_ma)
+                    pl.col("high").rolling_mean(window_size=length).alias(MA_length),
                 )
-                logger.info(f"{symbol} SMA is calculated")
-            elif "EWM" in short_ma and "EWM" in long_ma:
+                logger.info("SMA is calculated")
+            elif "EWM" in MA_length:
                 # Exponentially weighted moving average
                 df = df.with_columns(
-                        pl.col("high").ewm_mean(span=short_ma_nr).alias(short_ma),
-                        pl.col("high").ewm_mean(span=long_ma_nr).alias(long_ma)
+                        pl.col("high").ewm_mean(span=length).alias(MA_length),
                     )
-                logger.info(f"{symbol} EWM is calculated")
+                logger.info("EWM is calculated")
         except Exception as e:
-            logger.error(f"Error while calculating {symbol} MA  --> {e}")
+            logger.error(f"Error while calculating MA  --> {e}")
             return
         return df
     

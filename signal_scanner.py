@@ -34,7 +34,9 @@ class SignalScanner(Strategy):
         
     def scan_MA(self):
         for stock in self.stocks_list:
-            df = self.calc_MA(stock, self.short_MA, self.long_MA)
+            df = self.get_stock_data(stock)
+            df = self.calc_MA(df, self.short_MA)
+            df = self.calc_MA(df, self.long_MA)
             df_ma = self.calc_crossing_MA(df, self.short_MA, self.long_MA)
             if df_ma is not None and self.sell_buy_sig in df_ma:
                 buy_sig, sell_sig = self.__signal_regconize(df_ma)
