@@ -66,27 +66,6 @@ class vTrade():
             return
         return df
     
-    @staticmethod
-    def _check_listSubstr_in_Str(substr_ls: list[str], str_ls: list[str]) -> bool:
-        for substr in substr_ls:
-            for string in str_ls:
-                if substr in string:
-                    return True
-        return False
-
-    @staticmethod
-    def _get_fullname_cols(type_names: list[str], col_names: list[str]) -> list[str]:
-        """
-        e.g return detail name like EWM_20 from columns of dataframe 
-        """
-        res_cols = []
-        for type_name in type_names:
-            for col in col_names:
-                if type_name in col:
-                    res_cols.append(col)
-        return res_cols
-
-
     def show_MA(self, df: pl.DataFrame):
         if not vTrade._check_listSubstr_in_Str(self.columns, df.columns): 
             return
@@ -116,3 +95,31 @@ class vTrade():
                           xaxis=dict(title="Date"),
                           yaxis=dict(title="$ USD"))
         self.fig.show()
+
+    @staticmethod
+    def _check_listSubstr_in_Str(substr_ls: list[str], str_ls: list[str]) -> bool:
+        for substr in substr_ls:
+            for string in str_ls:
+                if substr in string:
+                    return True
+        return False
+    
+    @staticmethod
+    def _get_fullname_cols(type_names: list[str], col_names: list[str]) -> list[str]:
+        """
+        e.g return detail name like EWM_20 from columns of dataframe 
+        """
+        res_cols = []
+        for type_name in type_names:
+            for col in col_names:
+                if type_name in col:
+                    res_cols.append(col)
+        return res_cols
+    
+    @staticmethod
+    def _df_is_None(df: pl.DataFrame) -> bool:
+        if df is None or "close" not in df.columns:
+            logger.error("Invalid DataFrame")
+            return True
+        else:
+            return False

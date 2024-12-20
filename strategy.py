@@ -15,7 +15,7 @@ class Strategy(vTrade):
 
     @log_exectime
     def calc_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str) -> pl.DataFrame:
-        if df is not None:
+        if not self._df_is_None(df):
             if short_MA in df and long_MA in df:
                 try:
                     df = df.with_columns([
@@ -40,7 +40,7 @@ class Strategy(vTrade):
             logger.error("DataFrame is None")
     
     def show_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str):
-        if df is not None:
+        if not self._df_is_None(df):
             if short_MA not in df and long_MA not in df:
                 logger.debug("Dataframe columns do not contain MA types")
                 df = self.calc_crossing_MA(df, short_MA, long_MA)
@@ -103,8 +103,7 @@ class Strategy(vTrade):
             period: int = 14
         ) -> pl.DataFrame:    
 
-        if df is None or "close" not in df.columns:
-            logger.error("Invalid DataFrame")
+        if self._df_is_None(df):
             return None
         
         try:
@@ -171,8 +170,7 @@ class Strategy(vTrade):
         self.fig.show()
 
     def calc_bollinger_bands(self, df: pl.DataFrame) -> pl.DataFrame    :
-        if df is None or "close" not in df.columns:
-            logger.error("Invalid DataFrame")
+        if self._df_is_None(df):
             return None
 
         bb = BollingerBands()
