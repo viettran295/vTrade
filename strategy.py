@@ -169,6 +169,23 @@ class Strategy(vTrade):
                             "x": 0.5},
                 )
         self.fig.show()
+
+    def calc_bollinger_bands(self, df: pl.DataFrame) -> pl.DataFrame    :
+        if df is None or "close" not in df.columns:
+            logger.error("Invalid DataFrame")
+            return None
+
+        bb = BollingerBands()
+
+        try:
+            df = self.calc_MA(df, bb.moving_avg)
+            df = df.with_columns(
+                (pl.col(bb.moving_avg) + bb.nr_std * pl.col("close").rolling_std(window_size=bb.std_window)).alias(bb.upper_band),
+                (pl.col(bb.moving_avg) - bb.nr_std * pl.col("close").rolling_std(window_size=bb.std_window)).alias(bb.lower_band)
+            )
+            return df
+        except Exception as e:
+            logger.error(f"Error while calculating Bollinger bands: {e}")
     
 class RSI():
     def __init__(self) -> None:
@@ -179,3 +196,11 @@ class RSI():
         self.avg_loss = "avg_loss"
         self.RS = "RS"
         self.RSI = "RSI"
+    
+class BollingerBands():
+    def __init__(self):
+        self.upper_band = "Upper_band"
+        self.lower_band = "Lower_band"
+        self.moving_avg = "SMA_20"
+        self.nr_std = 2
+        self.std_window = int(self.moving_avg.split("_")[-1])
