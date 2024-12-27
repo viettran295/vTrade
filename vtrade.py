@@ -98,11 +98,7 @@ class vTrade():
 
     @staticmethod
     def _check_listSubstr_in_Str(substr_ls: list[str], str_ls: list[str]) -> bool:
-        for substr in substr_ls:
-            for string in str_ls:
-                if substr in string:
-                    return True
-        return False
+        return any(item in str_ls for item in substr_ls)
     
     @staticmethod
     def _get_fullname_cols(type_names: list[str], col_names: list[str]) -> list[str]:
