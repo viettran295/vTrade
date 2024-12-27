@@ -169,6 +169,7 @@ class Strategy(vTrade):
                 )
         self.fig.show()
 
+    @log_exectime
     def calc_bollinger_bands(self, df: pl.DataFrame) -> pl.DataFrame    :
         if self._df_is_None(df):
             return None
@@ -181,6 +182,13 @@ class Strategy(vTrade):
                 (pl.col(bb.moving_avg) + bb.nr_std * pl.col("close").rolling_std(window_size=bb.std_window)).alias(bb.upper_band),
                 (pl.col(bb.moving_avg) - bb.nr_std * pl.col("close").rolling_std(window_size=bb.std_window)).alias(bb.lower_band)
             )
+
+            df = df.with_columns([
+                pl.when(pl.col("high") > pl.col(bb.upper_band)).then(self.signal["sell"])
+                  .when(pl.col("low") < pl.col(bb.lower_band)).then(self.signal["buy"])
+                  .otherwise(None)
+                  .alias(self.sell_buy_sig)
+            ])
             return df
         except Exception as e:
             logger.error(f"Error while calculating Bollinger bands: {e}")
