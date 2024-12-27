@@ -185,6 +185,56 @@ class Strategy(vTrade):
         except Exception as e:
             logger.error(f"Error while calculating Bollinger bands: {e}")
     
+    def show_bollinger_bands(self, df: pl.DataFrame):
+        bb = BollingerBands()
+
+        if (
+            self._df_is_None(df) or 
+            not self._check_listSubstr_in_Str(self.columns, df.columns) or 
+            not self._check_listSubstr_in_Str([bb.lower_band, bb.upper_band, bb.moving_avg], df.columns)
+        ):
+            logger.error("Invalid DataFrame")
+            return None
+
+        self.fig.data = []
+        # Remove horizontal lines if exist
+        self.fig.layout.pop('shapes')
+
+        self.fig.add_trace(go.Candlestick(
+                                x=df["datetime"],
+                                open=df["open"], 
+                                close=df["close"], 
+                                high=df["high"],
+                                low=df["low"],
+                                name=bb.title,
+                            )
+                        )
+        self.fig.add_trace(go.Line(
+                        x=df["datetime"],
+                        y=df[bb.moving_avg],
+                        name=bb.moving_avg,
+                    )
+                )
+        self.fig.add_trace(go.Line(
+                        x=df["datetime"],
+                        y=df[bb.lower_band],
+                        name=bb.lower_band,
+                    )
+                )
+        self.fig.add_trace(go.Line(
+                        x=df["datetime"],
+                        y=df[bb.upper_band],
+                        name=bb.upper_band,
+                        fill='tonexty'
+                    )
+                )
+        self.fig.update_layout(
+                        title={"text": bb.title,
+                                "xanchor": "center",
+                                "x": 0.5},
+                        )
+        self.fig.show()
+
 class RSI():
     def __init__(self) -> None:
         self.delta = "delta"
@@ -197,6 +247,7 @@ class RSI():
     
 class BollingerBands():
     def __init__(self):
+        self.title = "Bollinger Bands"
         self.upper_band = "Upper_band"
         self.lower_band = "Lower_band"
         self.moving_avg = "SMA_20"
