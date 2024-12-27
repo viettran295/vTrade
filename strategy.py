@@ -195,6 +195,9 @@ class Strategy(vTrade):
         ):
             logger.error("Invalid DataFrame")
             return None
+        
+        overbound = df.filter((pl.col("high") > pl.col(bb.upper_band)))
+        underbound = df.filter((pl.col("low") < pl.col(bb.lower_band)))
 
         self.fig.data = []
         # Remove horizontal lines if exist
@@ -227,6 +230,18 @@ class Strategy(vTrade):
                         name=bb.upper_band,
                         fill='tonexty'
                     )
+                )
+        self.fig.add_trace(go.Scatter(
+                        x=overbound["datetime"],
+                        y=overbound["high"],
+                        mode="markers",
+                    )           
+                )
+        self.fig.add_trace(go.Scatter(
+                        x=underbound["datetime"],
+                        y=underbound["low"],
+                        mode="markers",
+                    )           
                 )
         self.fig.update_layout(
                         title={"text": bb.title,
