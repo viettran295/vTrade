@@ -2,6 +2,7 @@ from strategy import Strategy
 import polars as pl
 from loguru import logger
 from typing import List
+import time
 
 class SignalScanner(Strategy):
     def __init__(self, stocks_list: List[str], day_to_scan: int = 7) -> None:
@@ -17,6 +18,9 @@ class SignalScanner(Strategy):
             }
             for s in self.stocks_list
         }
+        self.last_query_time = {}
+        self.cache = {}
+        self.query_interval = 3600
 
     def set_stocks_to_scan(self, stocks_list: List[str]):
         for s in stocks_list:
@@ -33,9 +37,16 @@ class SignalScanner(Strategy):
             logger.error("Invalid moving average type")
     
     def scan(self, sig_type: str):
+        curr_time = time.time()
         for stock in self.stocks_list:
             logger.info(f" --- Scanning {stock} for {sig_type} ---")
-            df = self.get_stock_data(stock)
+            if curr_time - self.last_query_time.get(stock, 0) > self.query_interval:
+                df = self.get_stock_data(stock)
+                self.cache[stock] = df 
+                self.last_query_time[stock] = curr_time
+            else:
+                df = self.cache[stock]
+
             if df is not None:
                 match sig_type:
                     case "RSI":
