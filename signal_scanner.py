@@ -97,6 +97,4 @@ class SignalScanner(Strategy):
                 logger.info(f"{stock} buy signals: {self.signals[stock]['buy']}")
             elif self.signals[stock]["sell"]:
                 logger.info(f"{stock} sell signals: {self.signals[stock]['sell']}")
-            else:
-                logger.info(f"There is no sell-buy signal for {stock}")
         logger.warning("========================================== \n")
