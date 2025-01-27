@@ -1,12 +1,16 @@
-from vtrade import vTrade
 import polars as pl
 from loguru import logger
 import plotly.graph_objects as go
 from utils import log_exectime
+import utils
 
-class Strategy(vTrade):
+class Strategy:
+    
+    fig = go.Figure()
+    fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
+
     def __init__(self) -> None:
-        super().__init__()
+        self.columns = ["open", "close", "high", "close"]
         self.sell_buy_sig = "Signal"
         self.signal = {
             "buy": 1,
@@ -14,8 +18,33 @@ class Strategy(vTrade):
         }
 
     @log_exectime
+    def calc_MA(self, df: pl.DataFrame, MA_length: str) -> pl.DataFrame:
+        if df is None:
+            logger.error("DataFrame is None")
+            return 
+        
+        length = int(MA_length.split("_")[-1])
+
+        try:
+            if "SMA" in MA_length:
+                df = df.with_columns(
+                    pl.col("high").rolling_mean(window_size=length).alias(MA_length),
+                )
+                logger.info("SMA is calculated")
+            elif "EWM" in MA_length:
+                # Exponentially weighted moving average
+                df = df.with_columns(
+                        pl.col("high").ewm_mean(span=length).alias(MA_length),
+                    )
+                logger.info("EWM is calculated")
+        except Exception as e:
+            logger.error(f"Error while calculating MA  --> {e}")
+            return
+        return df
+    
+    @log_exectime
     def calc_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str) -> pl.DataFrame:
-        if not self._df_is_None(df):
+        if not utils.df_is_none(df):
             if short_MA in df and long_MA in df:
                 try:
                     df = df.with_columns([
@@ -40,7 +69,7 @@ class Strategy(vTrade):
             logger.error("DataFrame is None")
     
     def show_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str):
-        if not self._df_is_None(df):
+        if not utils.df_is_none(df):
             if short_MA not in df and long_MA not in df:
                 logger.debug("Dataframe columns do not contain MA types")
                 df = self.calc_crossing_MA(df, short_MA, long_MA)
@@ -103,7 +132,7 @@ class Strategy(vTrade):
             period: int = 14
         ) -> pl.DataFrame:    
 
-        if self._df_is_None(df):
+        if utils.df_is_none(df):
             return None
         
         try:
@@ -146,7 +175,7 @@ class Strategy(vTrade):
             return None
         
     def show_RSI(self, df_rsi: pl.DataFrame, upper_bound=80, lower_bound=20):
-        if not self._check_listSubstr_in_Str(["RSI", "datetime"], df_rsi.columns):
+        if not utils.check_list_substr_in_str(["RSI", "datetime"], df_rsi.columns):
             logger.debug("Dataframe columns do not contain RSI")
             df_rsi = self.calc_RSI(df_rsi)
         self.fig.data = []
@@ -171,7 +200,7 @@ class Strategy(vTrade):
 
     @log_exectime
     def calc_bollinger_bands(self, df: pl.DataFrame) -> pl.DataFrame    :
-        if self._df_is_None(df):
+        if utils.df_is_none(df):
             return None
 
         bb = BollingerBands()
@@ -197,9 +226,9 @@ class Strategy(vTrade):
         bb = BollingerBands()
 
         if (
-            self._df_is_None(df) or 
-            not self._check_listSubstr_in_Str(self.columns, df.columns) or 
-            not self._check_listSubstr_in_Str([bb.lower_band, bb.upper_band, bb.moving_avg], df.columns)
+            utils.df_is_none(df) or 
+            not utils.check_list_substr_in_str(self.columns, df.columns) or 
+            not utils.check_list_substr_in_str([bb.lower_band, bb.upper_band, bb.moving_avg], df.columns)
         ):
             logger.error("Invalid DataFrame")
             return None

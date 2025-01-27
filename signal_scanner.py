@@ -3,6 +3,7 @@ import polars as pl
 from loguru import logger
 from typing import List
 import time
+from vtrade import vTrade
 
 class SignalScanner(Strategy):
     def __init__(self, stocks_list: List[str], day_to_scan: int = 7) -> None:
@@ -38,10 +39,11 @@ class SignalScanner(Strategy):
     
     def scan(self, sig_type: str):
         curr_time = time.time()
+        vtr = vTrade()
         for stock in self.stocks_list:
             logger.info(f" --- Scanning {stock} for {sig_type} ---")
             if curr_time - self.last_query_time.get(stock, 0) > self.query_interval:
-                df = self.get_stock_data(stock)
+                df = vtr.get_stock_data(stock)
                 self.cache[stock] = df 
                 self.last_query_time[stock] = curr_time
             else:
