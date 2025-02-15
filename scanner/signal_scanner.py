@@ -3,7 +3,7 @@ import polars as pl
 from loguru import logger
 from typing import List
 import time
-from vtrade import vTrade
+from strategy.vtrade import vTrade
 
 class SignalScanner(Strategy):
     def __init__(self, stocks_list: List[str], day_to_scan: int = 7) -> None:

@@ -1,8 +1,7 @@
 import polars as pl
 from loguru import logger
 import plotly.graph_objects as go
-from utils import log_exectime
-import utils
+from utils import *
 
 class Strategy:
     
@@ -42,7 +41,7 @@ class Strategy:
             return
         return df
     
-    @log_exectime
+    @utils.log_exectime
     def calc_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str) -> pl.DataFrame:
         if not utils.df_is_none(df):
             if short_MA in df and long_MA in df:
@@ -123,7 +122,7 @@ class Strategy:
                 )
         self.fig.show()
     
-    @log_exectime
+    @utils.log_exectime
     def calc_RSI(
             self, 
             df: pl.DataFrame, 
@@ -198,7 +197,7 @@ class Strategy:
                 )
         self.fig.show()
 
-    @log_exectime
+    @utils.log_exectime
     def calc_bollinger_bands(self, df: pl.DataFrame) -> pl.DataFrame    :
         if utils.df_is_none(df):
             return None
