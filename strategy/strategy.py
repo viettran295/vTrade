@@ -89,7 +89,7 @@ class Strategy:
             )
 
         for ma_type in [short_MA, long_MA]:
-            self.fig.add_trace(go.Line(
+            self.fig.add_trace(go.Scatter(
                                     x=df["datetime"].to_list(),
                                     y=df[f"{ma_type}"].to_list(),
                                     name=f"{ma_type}"
