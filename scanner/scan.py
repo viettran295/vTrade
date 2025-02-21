@@ -1,7 +1,7 @@
 from signal_scanner import SignalScanner
 from utils import log_exectime
 
-stocks = ["MARA", "MSTR", "AAPL", "COIN", "CNSWF", "Bitcoin USD", "Ethereum USD"]
+stocks = ["MARA", "MSTR", "AAPL", "COIN", "CNSWF"]
 sig_types = ["MA", "RSI", "BB"]
 
 ss = SignalScanner(stocks)
