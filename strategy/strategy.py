@@ -81,8 +81,8 @@ class Strategy:
         
         self.fig.data = []
         self.fig.add_trace(go.Bar(
-                                x=df["datetime"], 
-                                y=df["high"], 
+                                x=df["datetime"].to_list(), 
+                                y=df["high"].to_list(), 
                                 name="Price",
                                 marker=dict(color='white')
                             )
@@ -90,15 +90,15 @@ class Strategy:
 
         for ma_type in [short_MA, long_MA]:
             self.fig.add_trace(go.Line(
-                                    x=df["datetime"],
-                                    y=df[f"{ma_type}"],
+                                    x=df["datetime"].to_list(),
+                                    y=df[f"{ma_type}"].to_list(),
                                     name=f"{ma_type}"
                                 )
                 )
             
         self.fig.add_trace(go.Scatter(
-                                x=signal_buy["datetime"],
-                                y=signal_buy[short_MA], mode="markers",
+                                x=signal_buy["datetime"].to_list(),
+                                y=signal_buy[short_MA].to_list(), mode="markers",
                                 marker=dict(size=9, 
                                             symbol="triangle-up",
                                             color="green"), 
@@ -107,8 +107,8 @@ class Strategy:
             )
 
         self.fig.add_trace(go.Scatter(
-                                x=signal_sell["datetime"],
-                                y=signal_sell[short_MA], mode="markers",
+                                x=signal_sell["datetime"].to_list(),
+                                y=signal_sell[short_MA].to_list(), mode="markers",
                                 marker=dict(size=9, symbol="triangle-down",
                                             color="red"), 
                                 name="Selling signal"
@@ -178,16 +178,16 @@ class Strategy:
             logger.debug("Dataframe columns do not contain RSI")
             df_rsi = self.calc_RSI(df_rsi)
         self.fig.data = []
-        self.fig.add_trace(go.Line(y=df_rsi["RSI"], x=df_rsi["datetime"], name="RSI"))
+        self.fig.add_trace(go.Line(y=df_rsi["RSI"].to_list(), x=df_rsi["datetime"].to_list(), name="RSI"))
         
         self.fig.add_hline(y=upper_bound, line_dash="dash", line_color="red")
         self.fig.add_hline(y=lower_bound, line_dash="dash", line_color="red")
 
         overbougt = df_rsi.filter(pl.col("RSI") > upper_bound)
         oversold = df_rsi.filter(pl.col("RSI") < lower_bound)
-        self.fig.add_trace(go.Scatter(y=overbougt["RSI"], x=overbougt["datetime"], 
+        self.fig.add_trace(go.Scatter(y=overbougt["RSI"].to_list(), x=overbougt["datetime"].to_list(), 
                                       mode="markers", marker=dict(color='red'), name="Over bought"))
-        self.fig.add_trace(go.Scatter(y=oversold["RSI"], x=oversold["datetime"], 
+        self.fig.add_trace(go.Scatter(y=oversold["RSI"].to_list(), x=oversold["datetime"].to_list(), 
                                       mode="markers", marker=dict(color="green"), name="Over sold"))
 
         self.fig.update_layout(
@@ -240,42 +240,42 @@ class Strategy:
         self.fig.layout.pop('shapes')
 
         self.fig.add_trace(go.Candlestick(
-                                x=df["datetime"],
-                                open=df["open"], 
-                                close=df["close"], 
-                                high=df["high"],
-                                low=df["low"],
+                                x=df["datetime"].to_list(),
+                                open=df["open"].to_list(), 
+                                close=df["close"].to_list(), 
+                                high=df["high"].to_list(),
+                                low=df["low"].to_list(),
                                 name=bb.title,
                             )
                         )
         self.fig.add_trace(go.Line(
-                        x=df["datetime"],
-                        y=df[bb.moving_avg],
+                        x=df["datetime"].to_list(),
+                        y=df[bb.moving_avg].to_list(),
                         name=bb.moving_avg,
                     )
                 )
         self.fig.add_trace(go.Line(
-                        x=df["datetime"],
-                        y=df[bb.lower_band],
+                        x=df["datetime"].to_list(),
+                        y=df[bb.lower_band].to_list(),
                         name=bb.lower_band,
                     )
                 )
         self.fig.add_trace(go.Line(
-                        x=df["datetime"],
-                        y=df[bb.upper_band],
+                        x=df["datetime"].to_list(),
+                        y=df[bb.upper_band].to_list(),
                         name=bb.upper_band,
                         fill='tonexty'
                     )
                 )
         self.fig.add_trace(go.Scatter(
-                        x=overbound["datetime"],
-                        y=overbound["high"],
+                        x=overbound["datetime"].to_list(),
+                        y=overbound["high"].to_list(),
                         mode="markers",
                     )           
                 )
         self.fig.add_trace(go.Scatter(
-                        x=underbound["datetime"],
-                        y=underbound["low"],
+                        x=underbound["datetime"].to_list(),
+                        y=underbound["low"].to_list(),
                         mode="markers",
                     )           
                 )
