@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 import duckdb
 import utils
 import os
-from dash_graph import plot_graphs 
+from dash_graph import plot_graphs, CrossingMA
 from dotenv import load_dotenv
 load_dotenv()
 from loguru import logger
@@ -15,6 +15,12 @@ app = Dash(
     title="__vTrade__",
     external_stylesheets=[dbc.themes.DARKLY, dbc_css]
 )
+
+utils.clean_up_db()
+
+x_ma = CrossingMA()
+
+DB_PATH = os.getenv("DUCKDB_PATH")
 
 app.layout = html.Div(
     style = {
@@ -60,20 +66,10 @@ app.layout = html.Div(
             },
         ),
         html.Br(),
-        dcc.Graph(
-            id="crossing_ma_graph",
-            style={
-                "display": "none",
-            }
-        ),
+        x_ma.layout(),
         dcc.Store(id="stock_data_store")
     ]
 )
-
-utils.clean_up_db()
-
-
-DB_PATH = os.getenv("DUCKDB_PATH")
 
 @callback (
     Output("stock_data_store", "data"),
