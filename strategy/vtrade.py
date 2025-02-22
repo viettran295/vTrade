@@ -4,6 +4,7 @@ import os
 import requests
 from datetime import date, timedelta
 import polars as pl 
+from loguru import logger
 
 class vTrade():
     def __init__(self) -> None:
@@ -17,9 +18,19 @@ class vTrade():
         if start_date is None:
             start_date = self.start_date
         url = f"https://api.twelvedata.com/time_series?symbol={symbol}&interval={interval}&start_date={start_date}&end_date={end_date}&apikey={self.api_key}"
-        resp = requests.get(url)
-        resp.raise_for_status()
-        data = resp.json()
+        try:
+            resp = requests.get(url, timeout=5)
+            resp.raise_for_status()
+            data = resp.json()
+        except TimeoutError as e :
+            logger.error(f"Timeout when request {symbol} -> {e}")
+            return None
+        except ConnectionError as e:
+            logger.error(f"Connection error when reques {symbol} -> {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Error when request {symbol} -> {e}")
+        
         # Add data to DataFrame
         if "values" in data:
             df = pl.DataFrame(data['values'])
