@@ -1,6 +1,36 @@
 from loguru import logger
 import polars as pl
 import time
+import duckdb
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+colors = {
+    'background': '#111111',
+    'text': '#04bc8c'
+    }
+
+
+DB_PATH = os.getenv("DUCKDB_PATH")
+
+def clean_up_db():
+    if os.path.exists(os.path.dirname(DB_PATH)):
+        try:
+            conn = duckdb.connect(DB_PATH)
+            tables = conn.execute("PRAGMA show_tables").fetchall()
+            tables_list = [row[0] for row in tables]
+            if not tables_list:
+                logger.debug("Database is empty")
+            for table in tables_list:
+                conn.execute(f"DROP TABLE {table}")
+                logger.info(f"Dropped table {table}")
+            conn.close()
+        except Exception as e:
+            logger.error(f"Error while cleaning databas -> {e}")
+    else:
+        os.makedirs(os.path.dirname(DB_PATH))
+    logger.info("Cleaned up data")
 
 def log_exectime(func):
     def wrapper(*args, **kwargs):
