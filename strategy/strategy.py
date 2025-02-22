@@ -67,7 +67,7 @@ class Strategy:
         else:
             logger.error("DataFrame is None")
     
-    def show_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str):
+    def show_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str) -> go.Figure():
         if not utils.df_is_none(df):
             if short_MA not in df and long_MA not in df:
                 logger.debug("Dataframe columns do not contain MA types")
@@ -120,7 +120,7 @@ class Strategy:
                             "xanchor": "center",
                             "x": 0.5},
                 )
-        self.fig.show()
+        return self.fig
     
     @utils.log_exectime
     def calc_RSI(
@@ -173,7 +173,7 @@ class Strategy:
             logger.error("Error while calculating RSI: ", e)
             return None
         
-    def show_RSI(self, df_rsi: pl.DataFrame, upper_bound=80, lower_bound=20):
+    def show_RSI(self, df_rsi: pl.DataFrame, upper_bound=80, lower_bound=20) -> go.Figure():
         if not utils.check_list_substr_in_str(["RSI", "datetime"], df_rsi.columns):
             logger.debug("Dataframe columns do not contain RSI")
             df_rsi = self.calc_RSI(df_rsi)
@@ -195,10 +195,10 @@ class Strategy:
                             "xanchor": "center",
                             "x": 0.5},
                 )
-        self.fig.show()
+        return self.fig
 
     @utils.log_exectime
-    def calc_bollinger_bands(self, df: pl.DataFrame) -> pl.DataFrame    :
+    def calc_bollinger_bands(self, df: pl.DataFrame) -> pl.DataFrame:
         if utils.df_is_none(df):
             return None
 
@@ -221,7 +221,7 @@ class Strategy:
         except Exception as e:
             logger.error(f"Error while calculating Bollinger bands: {e}")
     
-    def show_bollinger_bands(self, df: pl.DataFrame):
+    def show_bollinger_bands(self, df: pl.DataFrame) -> go.Figure():
         bb = BollingerBands()
 
         if (
@@ -284,7 +284,7 @@ class Strategy:
                                 "xanchor": "center",
                                 "x": 0.5},
                         )
-        self.fig.show()
+        return self.fig
 
 class RSI():
     def __init__(self) -> None:
