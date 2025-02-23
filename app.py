@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 import duckdb
 import utils
 import os
-from dash_graph import plot_graphs, DashCrossingMA, DashBackTesting
+from dash_components import RegisterCallbacks
 from dotenv import load_dotenv
 load_dotenv()
 from loguru import logger
@@ -17,8 +17,7 @@ app = Dash(
 )
 
 utils.clean_up_db()
-dash_bt = DashBackTesting()
-x_ma = DashCrossingMA(dash_bt)
+rc = RegisterCallbacks()
 
 DB_PATH = os.getenv("DUCKDB_PATH")
 
@@ -66,9 +65,9 @@ app.layout = html.Div(
             },
         ),
         html.Br(),
-        x_ma.layout(),
+        rc.x_ma.layout(),
         html.Br(),
-        dash_bt.layout(),
+        rc.dash_bt.layout(),
         dcc.Store(id="stock_data_store")
     ]
 )
@@ -97,8 +96,8 @@ def fetch_stock(_, search_stock):
         logger.debug(f"No data for {search_stock} is fetched")
         return {}
 
-plot_graphs.register_RMS_plot_callbacks()
-plot_graphs.register_backtest_plot_callback()
+rc.register_RMS_plot_callbacks()
+rc.register_backtest_plot_callback()
 
 if __name__ == "__main__":
     app.run_server(debug=True)
