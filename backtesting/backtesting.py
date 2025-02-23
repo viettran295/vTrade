@@ -22,6 +22,7 @@ class BackTesting:
         self.data = None
         self.order_size = []
         self.order_size_profit = []
+        self.position = 1
         
     def set_data(self, data: pl.DataFrame):
         if "Signal" not in data.columns:
@@ -35,16 +36,17 @@ class BackTesting:
             logger.error("Data is missing")
             return
         self.__reset_attr()
-        order_size = (self.cash / 100) * 10
+        order_size = self.cash * 0.2
         for row in self.data.to_dicts():
-            if row["Signal"] == 1:
+            if row["Signal"] == 1 and self.position == 1:
+                self.position = 0
                 shares_to_buy = order_size // row["close"]
-                if self.cash > order_size and shares_to_buy > 0:
-                    self.nr_shares += shares_to_buy
-                    self.cash -= shares_to_buy * row["close"]
-            elif row["Signal"] == 0:
+                self.nr_shares += shares_to_buy
+                self.cash -= shares_to_buy * row["close"]
+            elif row["Signal"] == 0 and self.position == 0:
+                self.position = 1
                 if self.nr_shares > 0:
-                    shares_to_sell = self.nr_shares // 10
+                    shares_to_sell = self.nr_shares
                     self.nr_shares -= shares_to_sell
                     self.cash += shares_to_sell * row["close"]
             else:
