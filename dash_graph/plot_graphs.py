@@ -2,12 +2,12 @@ from dash import callback, Input, Output, State
 from utils import *
 from strategy import Strategy
 import duckdb
-from .dash_crossing_ma import CrossingMA
+from .dash_crossing_ma import DashCrossingMA
 from .dash_backtesting import DashBackTesting
 from backtesting import BackTesting
 
 dash_bt = DashBackTesting()
-x_ma = CrossingMA(dash_bt)
+x_ma = DashCrossingMA(dash_bt)
 
 def register_RMS_plot_callbacks():
     @callback(

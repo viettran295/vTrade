@@ -1,17 +1,17 @@
 from dash import html, dcc
 import utils
 import dash_bootstrap_components as dbc
-from .backtest import BackTest
+from .dash_backtesting import DashBackTesting
 
-class CrossingMA():
-    def __init__(self, backtest: BackTest):
+class DashCrossingMA():
+    def __init__(self, dash_bt: DashBackTesting):
         self.short_ma_input = "short_ma_input"
         self.long_ma_input = "long_ma_input"
         self.ma_types = "ma_types"
         self.apply_crossing_ma_button = "apply_crossing_ma_button"
         self.crossing_ma_graph = "crossing_ma_graph"
         self.id_layout = "crossing_ma_layout"
-        self.show_backtest_button = backtest.show_button
+        self.show_backtest_button = dash_bt.show_button
 
     def layout(self):
         return html.Div(

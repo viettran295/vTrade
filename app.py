@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 import duckdb
 import utils
 import os
-from dash_graph import plot_graphs, CrossingMA, DashBackTesting
+from dash_graph import plot_graphs, DashCrossingMA, DashBackTesting
 from dotenv import load_dotenv
 load_dotenv()
 from loguru import logger
@@ -18,7 +18,7 @@ app = Dash(
 
 utils.clean_up_db()
 dash_bt = DashBackTesting()
-x_ma = CrossingMA(dash_bt)
+x_ma = DashCrossingMA(dash_bt)
 
 DB_PATH = os.getenv("DUCKDB_PATH")
 
