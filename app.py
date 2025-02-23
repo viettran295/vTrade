@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 import duckdb
 import utils
 import os
-from dash_graph import plot_graphs, CrossingMA
+from dash_graph import plot_graphs, CrossingMA, DashBackTesting
 from dotenv import load_dotenv
 load_dotenv()
 from loguru import logger
@@ -17,8 +17,8 @@ app = Dash(
 )
 
 utils.clean_up_db()
-
-x_ma = CrossingMA()
+dash_bt = DashBackTesting()
+x_ma = CrossingMA(dash_bt)
 
 DB_PATH = os.getenv("DUCKDB_PATH")
 
@@ -67,6 +67,8 @@ app.layout = html.Div(
         ),
         html.Br(),
         x_ma.layout(),
+        html.Br(),
+        dash_bt.layout(),
         dcc.Store(id="stock_data_store")
     ]
 )
@@ -88,7 +90,7 @@ def fetch_stock(_, search_stock):
     vtr = vTrade()
     df = vtr.get_stock_data(search_stock)
     if df is not None and not df.is_empty():
-        db_conn.execute(f"CREATE TABLE IF NOT EXISTS {search_stock} AS SELECT * from df")
+        db_conn.execute(f"CREATE TABLE IF NOT EXISTS {search_stock} AS SELECT * FROM df")
         logger.info(f"Fetched and cached {search_stock}")
         return df.to_dict(as_series=False)
     else:
@@ -96,6 +98,7 @@ def fetch_stock(_, search_stock):
         return {}
 
 plot_graphs.register_RMS_plot_callbacks()
+plot_graphs.register_backtest_plot_callback()
 
 if __name__ == "__main__":
     app.run_server(debug=True)

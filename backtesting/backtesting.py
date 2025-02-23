@@ -66,7 +66,7 @@ class BackTesting:
         logger.info(f"Profit: {self.cash - self.init_cash}")
         logger.info(f"Percentage profit: {((self.cash - self.init_cash) / self.init_cash) * 100}%")
     
-    def show_report(self):
+    def show_report(self) -> go.Figure:
         fig = make_subplots(rows=3, cols=1)
         fig.add_trace(go.Scatter(
                             x=self.datetime_lst, y=self.profit_lst,
@@ -90,21 +90,22 @@ class BackTesting:
                 xaxis_rangeslider_visible=False
         )
 
-        fig.show()
+        return fig
 
     def order_size_over_profit(self):
         for order_size in range(10, self.init_cash, 10):
             tmp = []
             self.__reset_attr()
             for row in self.data.to_dicts():
-                if row["Signal"] == 1:
+                if row["Signal"] == 1 and self.position == 1:
+                    self.position = 0
                     shares_to_buy = order_size // row["close"]
-                    if self.cash > order_size and shares_to_buy > 0:
-                        self.nr_shares += shares_to_buy
-                        self.cash -= shares_to_buy * row["close"]
-                elif row["Signal"] == 0:
+                    self.nr_shares += shares_to_buy
+                    self.cash -= shares_to_buy * row["close"]
+                elif row["Signal"] == 0 and self.position == 0:
+                    self.position = 1
                     if self.nr_shares > 0:
-                        shares_to_sell = self.nr_shares // 10
+                        shares_to_sell = self.nr_shares
                         self.nr_shares -= shares_to_sell
                         self.cash += shares_to_sell * row["close"]
                 else:
