@@ -68,15 +68,22 @@ class BackTesting:
     
     def show_report(self):
         fig = make_subplots(rows=3, cols=1)
-        fig.add_trace(go.Scatter(x=self.datetime_lst, y=self.cash_lst, 
-                                 mode="lines", name="Cash"),
-                                 row=1, col=1)
-        fig.add_trace(go.Scatter(x=self.datetime_lst, y=self.nr_shares_lst, 
-                                 mode="lines", name="Shares"),
-                                 row=2, col=1)
-        fig.add_trace(go.Scatter(x=self.datetime_lst, y=self.profit_lst,
-                                 mode="lines", name="Profit"),
-                                 row=3, col=1)
+        fig.add_trace(go.Scatter(
+                            x=self.datetime_lst, y=self.profit_lst,
+                            mode="lines", name="Profit"
+                        ),  row=1, col=1,
+        )
+        fig.add_hline(y=0, line_dash="dash", line_color="red", row=1, col=1)
+        fig.add_trace(go.Scatter(
+                            x=self.datetime_lst, y=self.cash_lst, 
+                            mode="lines", name="Cash"
+                        ),  row=2, col=1
+        )
+        fig.add_trace(go.Scatter(
+                            x=self.datetime_lst, y=self.nr_shares_lst, 
+                            mode="lines", name="Shares"
+                        ),  row=3, col=1
+        )
         fig.update_layout(
                 title="Backtesting report",
                 template="plotly_dark", 
