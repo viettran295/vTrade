@@ -9,15 +9,15 @@ from backtesting import BackTesting
 class RegisterCallbacks():
     def __init__(self):
         self.dash_bt = DashBackTesting()
-        self.x_ma = DashCrossingMA(self.dash_bt)
+        self.x_ma = DashCrossingMA()
 
     def register_RMS_plot_callbacks(self):
         @callback(
             Output(self.x_ma.crossing_ma_graph, "figure"),
             Output(self.x_ma.id_layout, "style"),
             Input(self.x_ma.apply_crossing_ma_button, "n_clicks"),
-            Input("stock_data_store", "data"),
-            State("search_stock", "value"),
+            Input("stock-data-store", "data"),
+            State("search-stock", "value"),
             State(self.x_ma.short_ma_input, "value"),
             State(self.x_ma.long_ma_input, "value"),
             State(self.x_ma.ma_types, "value"),
@@ -48,24 +48,22 @@ class RegisterCallbacks():
                 return {}, {"display": "none"}
             
     def register_backtest_plot_callback(self):
-        @callback (
-            Output(self.dash_bt.backtest_graph, "figure"),
-            Output(self.dash_bt.id_layout, "style"),
-            Output(self.x_ma.show_backtest_button, "children"),
-            Input(self.x_ma.show_backtest_button, "n_clicks"),
-            State(self.x_ma.show_backtest_button, "children"),
-            State("search_stock", "value"),
-            prevent_initial_call = True
-        )
-        def plot_backtest(_, button_content, search_stock):
-            show = "Show backtest"
-            hide = "Hide backtest"
-            if show == button_content:
-                db_conn = duckdb.connect(DB_PATH)
-                df = db_conn.execute(f"SELECT * FROM {search_stock}").pl()
-                bt = BackTesting()
-                bt.set_data(df)
-                bt.run()
-                return bt.show_report(), {"display": "block"}, hide
-            else:
-                return {}, {"display": "none"}, show
+        # @callback (
+        #     Output(self.dash_bt.backtest_graph, "figure"),
+        #     Output(self.dash_bt.id_layout, "style"),
+        #     State("search-stock", "value"),
+        #     prevent_initial_call = True
+        # )
+        # def plot_backtest(_, button_content, search_stock):
+        #     show = "Show backtest"
+        #     hide = "Hide backtest"
+        #     if show == button_content:
+        #         db_conn = duckdb.connect(DB_PATH)
+        #         df = db_conn.execute(f"SELECT * FROM {search_stock}").pl()
+        #         bt = BackTesting()
+        #         bt.set_data(df)
+        #         bt.run()
+        #         return bt.show_report(), {"display": "block"}, hide
+        #     else:
+        #         return {}, {"display": "none"}, show
+        pass

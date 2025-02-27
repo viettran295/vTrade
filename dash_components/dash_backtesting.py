@@ -2,9 +2,8 @@ from dash import html, dcc
 
 class DashBackTesting:
     def __init__(self):
-        self.show_button = "show_button"
-        self.backtest_graph = "backtest_graph"
-        self.id_layout = "backtest_layout"
+        self.backtest_graph = "backtest-graph"
+        self.id_layout = "backtest-layout"
     
     def layout(self):
         return html.Div(

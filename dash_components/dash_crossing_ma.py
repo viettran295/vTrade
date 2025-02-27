@@ -4,14 +4,13 @@ import dash_bootstrap_components as dbc
 from .dash_backtesting import DashBackTesting
 
 class DashCrossingMA():
-    def __init__(self, dash_bt: DashBackTesting):
-        self.short_ma_input = "short_ma_input"
-        self.long_ma_input = "long_ma_input"
-        self.ma_types = "ma_types"
-        self.apply_crossing_ma_button = "apply_crossing_ma_button"
-        self.crossing_ma_graph = "crossing_ma_graph"
-        self.id_layout = "crossing_ma_layout"
-        self.show_backtest_button = dash_bt.show_button
+    def __init__(self):
+        self.short_ma_input = "short-ma-input"
+        self.long_ma_input = "long-ma-input"
+        self.ma_types = "ma-types"
+        self.apply_crossing_ma_button = "apply-crossing-ma-button"
+        self.crossing_ma_graph = "crossing-ma-graph"
+        self.id_layout = "crossing-ma-layout"
 
     def layout(self):
         return html.Div(
@@ -83,14 +82,6 @@ class DashCrossingMA():
                                         "marginRight": "30px",
                                     },
                                 ),
-                                dbc.Button(
-                                    id=self.show_backtest_button,
-                                    children="Show backtest",
-                                    target="blank",
-                                    n_clicks=0,
-                                    color="success",
-                                    outline=True
-                                )
                             ],
                             style={
                                 "display": "flex",

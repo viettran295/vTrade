@@ -8,7 +8,8 @@ load_dotenv()
 
 colors = {
     'background': '#111111',
-    'text': '#04bc8c'
+    'text': '#04bc8c',
+    'sidebar': '#40403E',
     }
 
 
