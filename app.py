@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 import duckdb
 import utils
 import os
-from dash_components import RegisterCallbacks
+from dash_components import RegisterCallbacks, ConnectDB
 from dotenv import load_dotenv
 load_dotenv()
 from loguru import logger
@@ -18,10 +18,9 @@ app = Dash(
     external_stylesheets=[dbc.themes.DARKLY, dbc_css]
 )
 
-utils.clean_up_db()
 rc = RegisterCallbacks()
-
-DB_PATH = os.getenv("DUCKDB_PATH")
+db_conn = ConnectDB()
+db_conn.clean_up_db()
 
 app.layout = dbc.Container(
     style = {
@@ -79,32 +78,7 @@ app.layout = dbc.Container(
                                                         "display": "flex"
                                                     }
                                                 ),
-                                                html.H4("Technical indicators"),
-                                                dcc.Checklist(
-                                                    options=[
-                                                        {
-                                                            'label': html.Div(['Crossing MA'], 
-                                                                            style={'color': utils.colors["text"], 'font-size': 20,}
-                                                                    ),
-                                                            'value': 'x_ma',
-                                                             
-                                                        },
-                                                        {
-                                                            'label': html.Div(['RSI'], 
-                                                                            style={'color': utils.colors["text"], 'font-size': 20}
-                                                                    ),
-                                                            'value': 'rsi'
-                                                        },
-                                                        {
-                                                            'label': html.Div(['Bollinger bands'], 
-                                                                            style={'color': utils.colors["text"], 'font-size': 20}
-                                                                    ),
-                                                            'value': 'b_bands'
-                                                        }
-                                                    ],
-                                                    value=['x_ma'],
-                                                    labelStyle={"display": "flex", "align-items": "center",},
-                                                )
+                                                rc.checklist.layout()
                                             ]
                                         )
                                     ],
@@ -181,20 +155,15 @@ app.layout = dbc.Container(
 )
 
 async def fetch_stock(search_stock):
-    db_conn = duckdb.connect(DB_PATH)
-    tables = db_conn.execute("SHOW TABLES").fetchall()
-    tables_list = [row[0] for row in tables]
-    if search_stock in tables_list:
-        logger.debug(f"{search_stock} is already cached")
-        df = db_conn.execute(f"SELECT * FROM {search_stock}").pl()
-        return df.to_dict(as_series=False)
+    cached_df = db_conn.is_cached(search_stock)
+    if cached_df is not None:
+        return cached_df
 
     vtr = vTrade()
     resp = await vtr.get_stocks_async([search_stock])
     df = resp[search_stock]
     if df is not None and not df.is_empty():
-        db_conn.execute(f"CREATE TABLE IF NOT EXISTS {search_stock} AS SELECT * FROM df")
-        logger.info(f"Fetched and cached {search_stock}")
+        db_conn.create_table(df, search_stock)
         return df.to_dict(as_series=False)
     else:
         logger.debug(f"No data for {search_stock} is fetched")
@@ -209,8 +178,7 @@ def update_stock_data(_, search_stock):
     try:
         result = asyncio.run(fetch_stock(search_stock))
         return result
-    except Exception as e:
-        logger.error(f"Error while updating stock data -> {e}")
+    except Exception as _:
         return dash.no_update
 
 rc.register_RMS_plot_callbacks()

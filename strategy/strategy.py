@@ -41,6 +41,22 @@ class Strategy:
             return
         return df
     
+    def show_stock_price(self, df: pl.DataFrame) -> go.Figure:
+        self.fig.data = []
+        self.fig.add_trace(go.Bar(
+                        x=df["datetime"].to_list(), 
+                        y=df["close"].to_list(), 
+                        name="Close price",
+                        marker=dict(color='white')
+                    )
+        )
+        self.fig.update_layout(
+            title={"text": "Stock Price",
+                    "xanchor": "center",
+                    "x": 0.5},
+        )
+        return self.fig
+    
     @utils.log_exectime
     def calc_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str) -> pl.DataFrame:
         if not utils.df_is_none(df):
@@ -67,7 +83,7 @@ class Strategy:
         else:
             logger.error("DataFrame is None")
     
-    def show_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str) -> go.Figure():
+    def show_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str) -> go.Figure:
         if not utils.df_is_none(df):
             if short_MA not in df and long_MA not in df:
                 logger.debug("Dataframe columns do not contain MA types")
@@ -80,13 +96,7 @@ class Strategy:
         signal_sell = df.filter(df[self.sell_buy_sig] == 0)
         
         self.fig.data = []
-        self.fig.add_trace(go.Bar(
-                                x=df["datetime"].to_list(), 
-                                y=df["high"].to_list(), 
-                                name="Price",
-                                marker=dict(color='white')
-                            )
-            )
+        self.fig = self.show_stock_price(df)
 
         for ma_type in [short_MA, long_MA]:
             self.fig.add_trace(go.Scatter(
@@ -173,7 +183,7 @@ class Strategy:
             logger.error("Error while calculating RSI: ", e)
             return None
         
-    def show_RSI(self, df_rsi: pl.DataFrame, upper_bound=80, lower_bound=20) -> go.Figure():
+    def show_RSI(self, df_rsi: pl.DataFrame, upper_bound=80, lower_bound=20) -> go.Figure:
         if not utils.check_list_substr_in_str(["RSI", "datetime"], df_rsi.columns):
             logger.debug("Dataframe columns do not contain RSI")
             df_rsi = self.calc_RSI(df_rsi)
@@ -221,7 +231,7 @@ class Strategy:
         except Exception as e:
             logger.error(f"Error while calculating Bollinger bands: {e}")
     
-    def show_bollinger_bands(self, df: pl.DataFrame) -> go.Figure():
+    def show_bollinger_bands(self, df: pl.DataFrame) -> go.Figure:
         bb = BollingerBands()
 
         if (
