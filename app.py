@@ -114,13 +114,10 @@ app.layout = dbc.Container(
                                         "padding-left": "0px"
                                     }
                                 ),
-                            ],               
-                            style={
-                                "width": "300px",
-                            },
+                            ], 
                         )
                     ],
-                    width=3
+                    width=2
                 ),
                 # Main Content
                 dbc.Col(
