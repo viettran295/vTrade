@@ -1,4 +1,5 @@
 from dash import Dash, html, callback, Input, Output, State, dcc
+import dash
 import dash_bootstrap_components as dbc
 import duckdb
 import utils
@@ -8,6 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from loguru import logger
 from strategy import vTrade
+import asyncio
 
 dbc_css = "https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/minty/bootstrap.min.css"
 
@@ -181,12 +183,7 @@ app.layout = dbc.Container(
     fluid=True
 )
 
-@callback (
-    Output("stock-data-store", "data"),
-    Input("search-button", "n_clicks"),
-    State("search-stock", "value"),
-)
-def fetch_stock(_, search_stock):
+async def fetch_stock(search_stock):
     db_conn = duckdb.connect(DB_PATH)
     tables = db_conn.execute("SHOW TABLES").fetchall()
     tables_list = [row[0] for row in tables]
@@ -196,7 +193,8 @@ def fetch_stock(_, search_stock):
         return df.to_dict(as_series=False)
 
     vtr = vTrade()
-    df = vtr.get_stock_data(search_stock)
+    resp = await vtr.get_stocks_async([search_stock])
+    df = resp[search_stock]
     if df is not None and not df.is_empty():
         db_conn.execute(f"CREATE TABLE IF NOT EXISTS {search_stock} AS SELECT * FROM df")
         logger.info(f"Fetched and cached {search_stock}")
@@ -204,6 +202,19 @@ def fetch_stock(_, search_stock):
     else:
         logger.debug(f"No data for {search_stock} is fetched")
         return {}
+
+@callback (
+    Output("stock-data-store", "data"),
+    Input("search-button", "n_clicks"),
+    State("search-stock", "value"),
+)
+def update_stock_data(_, search_stock):
+    try:
+        result = asyncio.run(fetch_stock(search_stock))
+        return result
+    except Exception as e:
+        logger.error(f"Error while updating stock data -> {e}")
+        return dash.no_update
 
 rc.register_RMS_plot_callbacks()
 rc.register_backtest_plot_callback()

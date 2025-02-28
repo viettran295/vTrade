@@ -3,6 +3,7 @@ import polars as pl
 from loguru import logger
 from typing import List
 import time
+import asyncio
 from strategy.vtrade import vTrade
 
 class SignalScanner(Strategy):
@@ -37,34 +38,35 @@ class SignalScanner(Strategy):
         else:
             logger.error("Invalid moving average type")
     
-    def scan(self, sig_type: str):
+    async def scan_async(self, sig_types: List[str]):
         curr_time = time.time()
         vtr = vTrade()
+        stocks_to_fetch = []
         for stock in self.stocks_list:
-            logger.info(f" --- Scanning {stock} for {sig_type} ---")
             if curr_time - self.last_query_time.get(stock, 0) > self.query_interval:
-                df = vtr.get_stock_data(stock)
-                self.cache[stock] = df 
-                self.last_query_time[stock] = curr_time
-            else:
-                df = self.cache[stock]
+                stocks_to_fetch.append(stock)
 
-            if df is not None:
-                match sig_type:
-                    case "RSI":
-                        df = self.scan_RSI(df)
-                    case "BB":
-                        df = self.scan_bollinger_bands(df)
-                    case "MA":
-                        df = self.scan_MA(df)
+        logger.info(" --- Async scanner is starting  ---")
+        fetched_data = await vtr.get_stocks_async(stocks_to_fetch)
 
-                if df is not None and self.sell_buy_sig in df.columns:
-                    buy_sig, sell_sig = self.__signal_regconize(df)
-                    self.signals[stock]["buy"] = buy_sig
-                    self.signals[stock]["sell"] = sell_sig
-            else:
-                logger.error(f"Invalid Dataframe while scanning {stock}")
+        for stock, fetched_df in fetched_data.items():
+            self.cache[stock] = fetched_df 
+            self.last_query_time[stock] = curr_time
+
+        tasks = []
+        for stock in self.stocks_list:
+            for sig_type in sig_types:
+                df = self.cache.get(stock, None)
+                if df is not None:
+                    tasks.append(self.__process_stock_data(stock, df, sig_type))
+                    logger.debug(f"Executing processing task for {stock} - {sig_type}")
+                else:
+                    logger.error(f"Invalid Dataframe while getting from cache {stock} - {sig_type}")
+        await asyncio.gather(*tasks)
         self.__show_signals()
+
+    def scan(self, sig_types: List[str]):
+        asyncio.run(self.scan_async(sig_types))
 
     def scan_MA(self, df: pl.DataFrame) -> pl.DataFrame:
         df = self.calc_MA(df, self.short_MA)
@@ -100,3 +102,18 @@ class SignalScanner(Strategy):
             elif self.signals[stock]["sell"]:
                 logger.info(f"{stock} sell signals: {self.signals[stock]['sell']}")
         logger.warning("========================================== \n")
+    
+    async def __process_stock_data(self, stock, df, sig_type):
+        if df is not None:
+            match sig_type:
+                case "RSI":
+                    df = self.scan_RSI(df)
+                case "BB":
+                    df = self.scan_bollinger_bands(df)
+                case "MA":
+                    df = self.scan_MA(df)
+
+            if df is not None and self.sell_buy_sig in df.columns:
+                buy_sig, sell_sig = self.__signal_regconize(df)
+                self.signals[stock]["buy"] = buy_sig
+                self.signals[stock]["sell"] = sell_sig

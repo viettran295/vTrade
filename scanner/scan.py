@@ -1,15 +1,14 @@
 from signal_scanner import SignalScanner
 from utils import log_exectime
 
-stocks = ["MARA", "MSTR", "AAPL", "COIN", "CNSWF"]
+stocks = ["MARA", "MSTR", "AAPL", "COIN", "CNSWF", "AMZN", "NVDA", "GOOGL"]
 sig_types = ["MA", "RSI", "BB"]
 
 ss = SignalScanner(stocks)
 
 @log_exectime
 def main():
-    for sig in sig_types:
-        ss.scan(sig)
+    ss.scan(sig_types=sig_types)
             
 if __name__ == "__main__":
     main()
