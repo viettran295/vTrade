@@ -10,7 +10,7 @@ class Strategy:
     fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
 
     def __init__(self) -> None:
-        self.columns = ["open", "close", "high", "close"]
+        self.columns = ["datetime", "open", "close", "high", "low"]
         self.sell_buy_sig = "Signal"
         self.signal = {
             "buy": 1,

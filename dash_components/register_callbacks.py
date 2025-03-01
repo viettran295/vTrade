@@ -60,7 +60,16 @@ class RegisterCallbacks():
                 df = strategy.calc_MA(df, long_ma)
             if x_ma not in df.columns:
                 df = strategy.calc_crossing_MA(df, short_ma, long_ma)
-                self.db.update_table(df, search_stock)
+                self.db.update_columns(
+                    df,
+                    search_stock, 
+                    {
+                        short_ma: "FLOAT", 
+                        long_ma: "FLOAT", 
+                        x_ma: "FLOAT"
+                    },
+                    strategy.columns[0]
+                )
             if df is not None:
                 return strategy.show_crossing_MA(df, short_ma, long_ma), {"display": "block"}
             
