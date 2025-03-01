@@ -1,23 +1,22 @@
 import duckdb
 from loguru import logger
 import os
-from typing import Union
 import polars as pl
 
 class ConnectDB():
     def __init__(self):
         self.db_path = os.getenv("DUCKDB_PATH")
     
-    def create_table(self, df, search_stock):
+    def create_table(self, df: pl.DataFrame, stock_symbol: str):
         try:
             with duckdb.connect(self.db_path) as db_conn:
-                db_conn.execute(f"CREATE TABLE IF NOT EXISTS {search_stock} AS SELECT * FROM df")
-                logger.info(f"Fetched and cached {search_stock}")
+                db_conn.execute(f"CREATE TABLE IF NOT EXISTS {stock_symbol} AS SELECT * FROM df")
+                logger.info(f"Fetched and cached {stock_symbol}")
         except Exception as e:
-            logger.error(f"Error retrieving stock data: {e}")
+            logger.error(f"Error creating table for {stock_symbol}: {e}")
             return None
 
-    def get_stock_data(self, stock_symbol) -> duckdb.DuckDBPyConnection:
+    def get_stock_data(self, stock_symbol: str) -> duckdb.DuckDBPyConnection:
         """
         Retrieves stock data from the database.
         """
@@ -25,10 +24,10 @@ class ConnectDB():
             with duckdb.connect(self.db_path) as db_conn:
                 return db_conn.execute(f"SELECT * FROM {stock_symbol}").pl()
         except Exception as e:
-            logger.error(f"Error retrieving stock data: {e}")
+            logger.error(f"Error retrieving {stock_symbol}: {e}")
             return None
     
-    def update_stock_data(self, df, stock_symbol):
+    def update_table(self, df: pl.DataFrame, stock_symbol: str):
         """
         Updates the stock data in the database.
         """
@@ -59,16 +58,17 @@ class ConnectDB():
             os.makedirs(os.path.dirname(self.db_path))
         logger.info("Cleaned up data")
     
-    def is_cached(self, search_stock) -> Union[pl.DataFrame, None]:
+    def is_cached(self, stock_symbol) -> pl.DataFrame | None:
         try:
             with duckdb.connect(self.db_path) as db_conn:
                 tables = db_conn.execute("SHOW TABLES").fetchall()
                 tables_list = [row[0] for row in tables]
-                if search_stock in tables_list:
-                    logger.debug(f"{search_stock} is already cached")
-                    df = db_conn.execute(f"SELECT * FROM {search_stock}").pl()
+                if stock_symbol in tables_list:
+                    logger.debug(f"{stock_symbol} is already cached")
+                    df = db_conn.execute(f"SELECT * FROM {stock_symbol}").pl()
                     return df
                 else:
                     return None
         except Exception as e:
             logger.error(f"Error checking cached data: {e}")
+            return None

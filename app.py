@@ -157,7 +157,7 @@ app.layout = dbc.Container(
 async def fetch_stock(search_stock):
     cached_df = db_conn.is_cached(search_stock)
     if cached_df is not None:
-        return cached_df
+        return cached_df.to_dict(as_series=False)
 
     vtr = vTrade()
     resp = await vtr.get_stocks_async([search_stock])

@@ -2,6 +2,7 @@ import polars as pl
 from loguru import logger
 import plotly.graph_objects as go
 from utils import *
+import re
 
 class Strategy:
     
@@ -22,7 +23,8 @@ class Strategy:
             logger.error("DataFrame is None")
             return 
         
-        length = int(MA_length.split("_")[-1])
+        split = re.match(r"([a-zA-Z]+)(\d+)", MA_length)
+        length = int(split.group(2))
 
         try:
             if "SMA" in MA_length:
@@ -62,6 +64,7 @@ class Strategy:
         if not utils.df_is_none(df):
             if short_MA in df and long_MA in df:
                 try:
+                    self.sell_buy_sig = f"Signal_{short_MA}_{long_MA}"
                     df = df.with_columns([
                         # Short MA crossing over long MA -> buying point
                         pl.when((pl.col(short_MA) > pl.col(long_MA)) & (pl.col(short_MA).shift(1) <= pl.col(long_MA).shift(1)))
@@ -92,6 +95,7 @@ class Strategy:
             logger.error(f"Dataframe for MA calculation is None")
             return
 
+        self.sell_buy_sig = f"Signal_{short_MA}_{long_MA}"
         signal_buy = df.filter(df[self.sell_buy_sig] == 1)
         signal_sell = df.filter(df[self.sell_buy_sig] == 0)
         
