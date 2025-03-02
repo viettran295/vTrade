@@ -53,9 +53,11 @@ class Strategy:
                     )
         )
         self.fig.update_layout(
-            title={"text": "Stock Price",
-                    "xanchor": "center",
-                    "x": 0.5},
+            title={
+                "text": "Stock Price",
+                "x": 0.5
+            },
+            font=dict(size=18),
         )
         return self.fig
     
@@ -130,9 +132,11 @@ class Strategy:
             )
         
         self.fig.update_layout(
-                    title={"text": "Crossing MA",
-                            "xanchor": "center",
-                            "x": 0.5},
+                    title={
+                        "text": "Crossing MA",
+                        "x": 0.5
+                    },
+                    font=dict(size=18)
                 )
         return self.fig
     
@@ -206,9 +210,11 @@ class Strategy:
                                       mode="markers", marker=dict(color="green"), name="Over sold"))
 
         self.fig.update_layout(
-                    title={"text": "Relative strength index (RSI) plot",
-                            "xanchor": "center",
-                            "x": 0.5},
+                    title={
+                        "text": "Relative strength index (RSI) plot",
+                        "x": 0.5
+                    },
+                    font=dict(size=18)
                 )
         return self.fig
 
@@ -296,10 +302,13 @@ class Strategy:
                     )           
                 )
         self.fig.update_layout(
-                        title={"text": bb.title,
-                                "xanchor": "center",
-                                "x": 0.5},
-                        )
+                        title={
+                            "text": bb.title,
+                            "xanchor": "center",
+                            "x": 0.5
+                        },
+                        font=dict(size=18)
+                )
         return self.fig
 
 class RSI():

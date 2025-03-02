@@ -1,9 +1,7 @@
 from dash import Dash, html, callback, Input, Output, State, dcc
 import dash
 import dash_bootstrap_components as dbc
-import duckdb
 import utils
-import os
 from dash_components import RegisterCallbacks, ConnectDB
 from dotenv import load_dotenv
 load_dotenv()
@@ -96,51 +94,7 @@ app.layout = dbc.Container(
                 # Main Content
                 dbc.Col(
                     [
-                        dbc.Tabs(
-                            [
-                                dbc.Tab(
-                                    tab_id="ta_tab",
-                                    label="Technical Analysis",
-                                    children=[
-                                        html.Br(),
-                                        rc.x_ma.layout(),
-                                    ],
-                                    active_tab_style={
-                                        "fontStyle": "italic",
-                                    },
-                                    active_label_style={
-                                        "color": "#000000",
-                                    },
-                                    style={"marginBottom": "20px"},
-                                ),
-                                dbc.Tab(
-                                    tab_id="bt-tab",
-                                    label="Backtesting", 
-                                    children=[
-                                        rc.dash_bt.layout(),
-                                    ],
-                                    active_tab_style={
-                                        "fontStyle": "italic",
-                                    },
-                                    active_label_style={
-                                        "color": "#000000",
-                                    }
-                                ),
-                                dbc.Tab(
-                                    tab_id="pt-tab",
-                                    label="Paper Trading",
-                                    children=[
-
-                                    ],
-                                    active_tab_style={
-                                        "fontStyle": "italic",
-                                    },
-                                    active_label_style={
-                                        "color": "#000000",
-                                    }
-                                )
-                            ]
-                        )
+                        rc.tabs.layout()
                     ],
                 )
             ],

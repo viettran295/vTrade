@@ -12,7 +12,7 @@ class DashBackTesting:
                                     id=self.backtest_graph,
                                 ),
                     style={
-                        "display": "none",
+                        "display": "block",
                         "justifyContent": "center",
                         "alignItems": "center" 
                     },

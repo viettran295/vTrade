@@ -1,10 +1,10 @@
-from dash import callback, Input, Output, State
+from dash import callback, Input, Output, State, exceptions
 from utils import *
 from strategy import Strategy
-import duckdb
 from .dash_crossing_ma import DashCrossingMA
 from .dash_backtesting import DashBackTesting
 from .dash_checklist import DashChecklist
+from .dash_tabs import DashTabs
 from .db import ConnectDB
 from backtesting import BackTesting
 
@@ -14,6 +14,7 @@ class RegisterCallbacks():
         self.x_ma = DashCrossingMA()
         self.checklist = DashChecklist()
         self.db = ConnectDB()
+        self.tabs = DashTabs()
         self.not_display = {}, {"display": "none"}
 
     def register_RMS_plot_callbacks(self):
@@ -77,22 +78,18 @@ class RegisterCallbacks():
     
             
     def register_backtest_plot_callback(self):
-        # @callback (
-        #     Output(self.dash_bt.backtest_graph, "figure"),
-        #     Output(self.dash_bt.id_layout, "style"),
-        #     State("search-stock", "value"),
-        #     prevent_initial_call = True
-        # )
-        # def plot_backtest(_, button_content, search_stock):
-        #     show = "Show backtest"
-        #     hide = "Hide backtest"
-        #     if show == button_content:
-        #         db_conn = duckdb.connect(DB_PATH)
-        #         df = db_conn.execute(f"SELECT * FROM {search_stock}").pl()
-        #         bt = BackTesting()
-        #         bt.set_data(df)
-        #         bt.run()
-        #         return bt.show_report(), {"display": "block"}, hide
-        #     else:
-        #         return {}, {"display": "none"}, show
-        pass
+        @callback (
+            Output(self.dash_bt.backtest_graph, "figure"),
+            Input(self.tabs.id_layout, "active_tab"),
+            State("search-stock", "value"),
+            prevent_initial_call = True
+        )
+        def plot_backtest(tab_id, search_stock):
+            if tab_id == self.tabs.backtesting_id:
+                df = self.db.get_stock_data(search_stock)
+                bt = BackTesting()
+                bt.set_data(df)
+                bt.run()
+                return bt.show_report()
+            else:
+                raise exceptions.PreventUpdate 

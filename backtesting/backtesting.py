@@ -23,9 +23,10 @@ class BackTesting:
         self.order_size = []
         self.order_size_profit = []
         self.position = 1
+        self.signal = "Signal"
         
     def set_data(self, data: pl.DataFrame):
-        if "Signal" not in data.columns:
+        if not any(col.startswith(self.signal) for col in data.columns):
             logger.error("Signal column is missing")
             return
         else:
@@ -37,13 +38,14 @@ class BackTesting:
             return
         self.__reset_attr()
         order_size = self.cash * 0.2
+        signal_col = ''.join([col for col in self.data.columns if col.startswith(self.signal)])
         for row in self.data.to_dicts():
-            if row["Signal"] == 1 and self.position == 1:
+            if row[signal_col] == 1 and self.position == 1:
                 self.position = 0
                 shares_to_buy = order_size // row["close"]
                 self.nr_shares += shares_to_buy
                 self.cash -= shares_to_buy * row["close"]
-            elif row["Signal"] == 0 and self.position == 0:
+            elif row[signal_col] == 0 and self.position == 0:
                 self.position = 1
                 if self.nr_shares > 0:
                     shares_to_sell = self.nr_shares
@@ -85,7 +87,11 @@ class BackTesting:
                         ),  row=3, col=1
         )
         fig.update_layout(
-                title="Backtesting report",
+                title={
+                    "text": "Backtesting report",
+                    "x": 0.5
+                },
+                font=dict(size=18),
                 template="plotly_dark", 
                 xaxis_rangeslider_visible=False
         )
@@ -96,13 +102,14 @@ class BackTesting:
         for order_size in range(10, self.init_cash, 10):
             tmp = []
             self.__reset_attr()
+            signal_col = ''.join([col for col in self.data.columns if col.startswith(self.signal)])
             for row in self.data.to_dicts():
-                if row["Signal"] == 1 and self.position == 1:
+                if row[signal_col] == 1 and self.position == 1:
                     self.position = 0
                     shares_to_buy = order_size // row["close"]
                     self.nr_shares += shares_to_buy
                     self.cash -= shares_to_buy * row["close"]
-                elif row["Signal"] == 0 and self.position == 0:
+                elif row[signal_col] == 0 and self.position == 0:
                     self.position = 1
                     if self.nr_shares > 0:
                         shares_to_sell = self.nr_shares
