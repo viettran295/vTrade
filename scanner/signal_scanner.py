@@ -11,8 +11,8 @@ class SignalScanner(Strategy):
         super().__init__()
         self.stocks_list = stocks_list
         self.day_to_scan = day_to_scan
-        self.short_MA = "SMA_20"
-        self.long_MA = "SMA_100"
+        self.short_MA = "SMA20"
+        self.long_MA = "SMA100"
         self.signals = {
             s: {
                 "buy": None,
@@ -87,11 +87,12 @@ class SignalScanner(Strategy):
         sell_signals = []
 
         for sig in df.tail(self.day_to_scan).iter_rows(named=True):
-            if sig[self.sell_buy_sig] == self.signal["buy"]:
-                buy_signals.append((sig["datetime"], sig["close"], sig["Signal"]))
-            if sig[self.sell_buy_sig] == self.signal["sell"]:
-                sell_signals.append((sig["datetime"], sig["close"], sig["Signal"]))
-        logger.info("Recognized sell-buy signal")
+            signal_key = list(sig.keys())[-1]
+            if sig[signal_key] == self.signal["buy"]:
+                buy_signals.append((sig["datetime"], sig["close"], sig[signal_key]))
+            if sig[signal_key] == self.signal["sell"]:
+                sell_signals.append((sig["datetime"], sig["close"], sig[signal_key]))
+            logger.info("Recognized sell-buy signal")
         return buy_signals, sell_signals
     
     def __show_signals(self):

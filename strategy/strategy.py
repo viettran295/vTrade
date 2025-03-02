@@ -150,6 +150,7 @@ class Strategy:
         
         try:
             rsi = RSI()
+            self.sell_buy_sig = f"Signal_RSI_U{upper_bound}_L{lower_bound}_P{period}"
             # Calculate difference between previous day
             df_rsi =  df.with_columns(
                 (pl.col("close") - pl.col("close").shift(1)).alias(rsi.delta)
@@ -219,6 +220,7 @@ class Strategy:
         bb = BollingerBands()
 
         try:
+            self.sell_buy_sig = f"Signal_BB_MVA{bb.moving_avg}_STD{bb.nr_std}"
             df = self.calc_MA(df, bb.moving_avg)
             df = df.with_columns(
                 (pl.col(bb.moving_avg) + bb.nr_std * pl.col("close").rolling_std(window_size=bb.std_window)).alias(bb.upper_band),
@@ -315,6 +317,7 @@ class BollingerBands():
         self.title = "Bollinger Bands"
         self.upper_band = "Upper_band"
         self.lower_band = "Lower_band"
-        self.moving_avg = "SMA_20"
+        self.moving_avg = "SMA20"
         self.nr_std = 2
-        self.std_window = int(self.moving_avg.split("_")[-1])
+        match = re.match(r"([a-zA-Z]+)(\d+)", self.moving_avg)
+        self.std_window = int(match.group(2))
