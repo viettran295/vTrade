@@ -15,8 +15,8 @@ class SignalScanner(Strategy):
         self.long_MA = "SMA100"
         self.signals = {
             s: {
-                "buy": None,
-                "sell": None
+                "buy": pl.DataFrame,
+                "sell": pl.DataFrame
             }
             for s in self.stocks_list
         }
@@ -83,24 +83,39 @@ class SignalScanner(Strategy):
         if df is None:
             return
         
-        buy_signals = []
-        sell_signals = []
+        buy_signals = {
+            "datetime": [],
+            "close": [],
+        }
+        sell_signals = buy_signals
+        init = False
 
         for sig in df.tail(self.day_to_scan).iter_rows(named=True):
-            signal_key = list(sig.keys())[-1]
+            if not init:
+                signal_key = list(sig.keys())[-1]
+                buy_signals[signal_key] = []
+                sell_signals[signal_key] = []
+                init = True
+
             if sig[signal_key] == self.signal["buy"]:
-                buy_signals.append((sig["datetime"], sig["close"], sig[signal_key]))
+                buy_signals["datetime"].append(sig["datetime"])
+                buy_signals["close"].append(sig["close"])
+                buy_signals[signal_key].append(sig[signal_key])
             if sig[signal_key] == self.signal["sell"]:
-                sell_signals.append((sig["datetime"], sig["close"], sig[signal_key]))
+                sell_signals["datetime"].append(sig["datetime"])
+                sell_signals["close"].append(sig["close"])
+                sell_signals[signal_key].append(sig[signal_key])
+                
             logger.info("Recognized sell-buy signal")
+
         return buy_signals, sell_signals
     
     def __show_signals(self):
         logger.warning("============ Sell-buy signals ============")
         for stock in self.stocks_list:
-            if self.signals[stock]["buy"]:
+            if not self.signals[stock]["buy"].is_empty():
                 logger.info(f"{stock} buy signals: {self.signals[stock]['buy']}")
-            elif self.signals[stock]["sell"]:
+            elif not self.signals[stock]["sell"].is_empty():
                 logger.info(f"{stock} sell signals: {self.signals[stock]['sell']}")
         logger.warning("========================================== \n")
     
@@ -116,5 +131,5 @@ class SignalScanner(Strategy):
 
             if df is not None and self.sell_buy_sig in df.columns:
                 buy_sig, sell_sig = self.__signal_regconize(df)
-                self.signals[stock]["buy"] = buy_sig
-                self.signals[stock]["sell"] = sell_sig
+                self.signals[stock]["buy"] = pl.DataFrame(buy_sig)
+                self.signals[stock]["sell"] = pl.DataFrame(sell_sig)
