@@ -3,45 +3,27 @@ from loguru import logger
 import plotly.graph_objects as go
 from utils import *
 import re
+from abc import ABC, abstractmethod
 
-class Strategy:
+class Strategy(ABC):
     
     fig = go.Figure()
     fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
 
     def __init__(self) -> None:
         self.columns = ["datetime", "open", "close", "high", "low"]
-        self.sell_buy_sig = "Signal"
-        self.signal = {
+        self.signal = ""
+        self.bin_signal = {
             "buy": 1,
             "sell": 0
         }
-
-    @log_exectime
-    def calc_MA(self, df: pl.DataFrame, MA_length: str) -> pl.DataFrame:
-        if df is None:
-            logger.error("DataFrame is None")
-            return 
-        
-        split = re.match(r"([a-zA-Z]+)(\d+)", MA_length)
-        length = int(split.group(2))
-
-        try:
-            if "SMA" in MA_length:
-                df = df.with_columns(
-                    pl.col("high").rolling_mean(window_size=length).alias(MA_length),
-                )
-                logger.info("SMA is calculated")
-            elif "EWM" in MA_length:
-                # Exponentially weighted moving average
-                df = df.with_columns(
-                        pl.col("high").ewm_mean(span=length).alias(MA_length),
-                    )
-                logger.info("EWM is calculated")
-        except Exception as e:
-            logger.error(f"Error while calculating MA  --> {e}")
-            return
-        return df
+    @abstractmethod
+    def execute(self):
+        pass
+    
+    @abstractmethod
+    def show(self):
+        return
     
     def show_stock_price(self, df: pl.DataFrame) -> go.Figure:
         self.fig.data = []
@@ -59,85 +41,6 @@ class Strategy:
             },
             font=dict(size=18),
         )
-        return self.fig
-    
-    @utils.log_exectime
-    def calc_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str) -> pl.DataFrame:
-        if not utils.df_is_none(df):
-            if short_MA in df and long_MA in df:
-                try:
-                    self.sell_buy_sig = f"Signal_{short_MA}_{long_MA}"
-                    df = df.with_columns([
-                        # Short MA crossing over long MA -> buying point
-                        pl.when((pl.col(short_MA) > pl.col(long_MA)) & (pl.col(short_MA).shift(1) <= pl.col(long_MA).shift(1)))
-                        .then(self.signal["buy"])
-                        # Short MA crossing down long MA -> selling point
-                        .when((pl.col(short_MA) < pl.col(long_MA)) & (pl.col(short_MA).shift(1) >= pl.col(long_MA).shift(1)))
-                        .then(self.signal["sell"])
-                        .otherwise(None)
-                        .alias(self.sell_buy_sig)
-                    ])
-                    logger.info("Calculated crossing MA points")
-                    logger.info("Sell-buy signal for crossing MA is generated")
-                    return df
-                except Exception as e:
-                    logger.error("Error while implementing Cross MA")
-                    return
-            else:
-                logger.error(f"{short_MA} or {long_MA} not in Dataframe")
-        else:
-            logger.error("DataFrame is None")
-    
-    def show_crossing_MA(self, df: pl.DataFrame, short_MA: str, long_MA: str) -> go.Figure:
-        if not utils.df_is_none(df):
-            if short_MA not in df and long_MA not in df:
-                logger.debug("Dataframe columns do not contain MA types")
-                df = self.calc_crossing_MA(df, short_MA, long_MA)
-        else:
-            logger.error(f"Dataframe for MA calculation is None")
-            return
-
-        self.sell_buy_sig = f"Signal_{short_MA}_{long_MA}"
-        signal_buy = df.filter(df[self.sell_buy_sig] == 1)
-        signal_sell = df.filter(df[self.sell_buy_sig] == 0)
-        
-        self.fig.data = []
-        self.fig = self.show_stock_price(df)
-
-        for ma_type in [short_MA, long_MA]:
-            self.fig.add_trace(go.Scatter(
-                                    x=df["datetime"].to_list(),
-                                    y=df[f"{ma_type}"].to_list(),
-                                    name=f"{ma_type}"
-                                )
-                )
-            
-        self.fig.add_trace(go.Scatter(
-                                x=signal_buy["datetime"].to_list(),
-                                y=signal_buy[short_MA].to_list(), mode="markers",
-                                marker=dict(size=9, 
-                                            symbol="triangle-up",
-                                            color="green"), 
-                                name="Buying signal"
-                            )
-            )
-
-        self.fig.add_trace(go.Scatter(
-                                x=signal_sell["datetime"].to_list(),
-                                y=signal_sell[short_MA].to_list(), mode="markers",
-                                marker=dict(size=9, symbol="triangle-down",
-                                            color="red"), 
-                                name="Selling signal"
-                            )
-            )
-        
-        self.fig.update_layout(
-                    title={
-                        "text": "Crossing MA",
-                        "x": 0.5
-                    },
-                    font=dict(size=18)
-                )
         return self.fig
     
     @utils.log_exectime
