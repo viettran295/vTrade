@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 from utils import *
 from strategy import Strategy
-from crossing_ma import StrategyCrossingMA
+from strategy.crossing_ma import StrategyCrossingMA
 
 class StrategyBollingerBands(Strategy):
     def __init__(self, moving_avg: int=20, standard_deviation: int=2):
