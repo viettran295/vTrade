@@ -18,6 +18,7 @@ class RegisterCallbacks():
         self.not_display = {}, {"display": "none"}
         self.vtrade = vTrade()
         self.strategy_x_ma = StrategyCrossingMA()
+        self.strategy_name = ""
 
     def register_RMS_plot_callbacks(self):
         @callback(
@@ -40,6 +41,7 @@ class RegisterCallbacks():
             long_ma: int = 50,
             ma_type: str = "SMA",
         ):
+            self.strategy_name = f"Signal_{ma_type}_{short_ma}_{long_ma}"
             if stock_data_store is None or len(stock_data_store) == 0:
                 return self.not_display
             
@@ -82,7 +84,7 @@ class RegisterCallbacks():
                 df = self.db.get_stock_data(search_stock)
                 bt = BackTesting()
                 bt.set_data(df)
-                bt.run()
-                return bt.show_report()
+                bt.run(self.strategy_name)
+                return bt.show_report(self.strategy_name)
             else:
                 raise exceptions.PreventUpdate 

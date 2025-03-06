@@ -8,22 +8,21 @@ class BackTesting:
     fig = go.Figure()
     fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
 
+    datetime_col = "datetime"
+    cash_col = "cash"
+    number_shares_col = "nr_shares"
+    profit_col = "profit"
+
     def __init__(self, init_cash: float = 10000):
-        self.symbol = None
         self.init_cash = init_cash
         self.cash = init_cash
-        self.cash_lst = []
-        self.amount_sell = 0
-        self.amount_buy = 0
         self.nr_shares = 0
-        self.nr_shares_lst = []
-        self.profit_lst = []
-        self.datetime_lst = []
         self.data = None
         self.order_size = []
         self.order_size_profit = []
         self.position = 1
         self.signal = "Signal"
+        self.results = None
         
     def set_data(self, data: pl.DataFrame):
         if not any(col.startswith(self.signal) for col in data.columns):
@@ -32,20 +31,25 @@ class BackTesting:
         else:
             self.data = data
         
-    def run(self):
+    def run(self, strategy: str):
         if self.data is None:
             logger.error("Data is missing")
             return
+
         self.__reset_attr()
         order_size = self.cash * 0.2
-        signal_col = ''.join([col for col in self.data.columns if col.startswith(self.signal)])
+        datetime_data = []
+        cash_data = []
+        nr_shares_data = []
+        profit_data = []
+
         for row in self.data.to_dicts():
-            if row[signal_col] == 1 and self.position == 1:
+            if row[strategy] == 1 and self.position == 1:
                 self.position = 0
                 shares_to_buy = order_size // row["close"]
                 self.nr_shares += shares_to_buy
                 self.cash -= shares_to_buy * row["close"]
-            elif row[signal_col] == 0 and self.position == 0:
+            elif row[strategy] == 0 and self.position == 0:
                 self.position = 1
                 if self.nr_shares > 0:
                     shares_to_sell = self.nr_shares
@@ -53,10 +57,18 @@ class BackTesting:
                     self.cash += shares_to_sell * row["close"]
             else:
                 continue
-            self.datetime_lst.append(row["datetime"])
-            self.cash_lst.append(self.cash)
-            self.nr_shares_lst.append(self.nr_shares)
-            self.profit_lst.append(((self.cash - self.init_cash) / self.init_cash * 100))
+
+            datetime_data.append(row["datetime"])
+            cash_data.append(self.cash)
+            nr_shares_data.append(self.nr_shares)
+            profit_data.append(((self.cash - self.init_cash) / self.init_cash * 100))
+
+        self.results = pl.DataFrame({
+            self.datetime_col: datetime_data,
+            self.cash_col: cash_data,
+            self.number_shares_col: nr_shares_data,
+            self.profit_col: profit_data
+        })
 
     def report(self):
         logger.info("================ Report ====================")
@@ -68,27 +80,32 @@ class BackTesting:
         logger.info(f"Profit: {self.cash - self.init_cash}")
         logger.info(f"Percentage profit: {((self.cash - self.init_cash) / self.init_cash) * 100}%")
     
-    def show_report(self) -> go.Figure:
+    def show_report(self, strategy: str) -> go.Figure:
+        if self.results is None or self.results.is_empty():
+            logger.warning(f"Strategy {strategy} no found.")
+            return
+
         fig = make_subplots(rows=3, cols=1)
         fig.add_trace(go.Scatter(
-                            x=self.datetime_lst, y=self.profit_lst,
+                            x=self.results[self.datetime_col], 
+                            y=self.results[self.profit_col],
                             mode="lines", name="Profit"
                         ),  row=1, col=1,
         )
         fig.add_hline(y=0, line_dash="dash", line_color="red", row=1, col=1)
         fig.add_trace(go.Scatter(
-                            x=self.datetime_lst, y=self.cash_lst, 
+                            x=self.results[self.datetime_col], y=self.results[self.cash_col], 
                             mode="lines", name="Cash"
                         ),  row=2, col=1
         )
         fig.add_trace(go.Scatter(
-                            x=self.datetime_lst, y=self.nr_shares_lst, 
+                            x=self.results[self.datetime_col], y=self.results[self.number_shares_col], 
                             mode="lines", name="Shares"
                         ),  row=3, col=1
         )
         fig.update_layout(
                 title={
-                    "text": "Backtesting report",
+                    "text": f"Backtesting report for {strategy}",
                     "x": 0.5
                 },
                 font=dict(size=18),
@@ -137,7 +154,3 @@ class BackTesting:
     def __reset_attr(self):
         self.cash = self.init_cash
         self.nr_shares = 0
-        self.cash_lst = []
-        self.nr_shares_lst = []
-        self.profit_lst = []
-        self.datetime_lst = []
