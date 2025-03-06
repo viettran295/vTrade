@@ -4,11 +4,12 @@ from loguru import logger
 from typing import List
 import time
 import asyncio
+from typing import List
 from strategy.vtrade import vTrade
 
 class SignalScanner:
-    def __init__(self, strategy: Strategy, stocks_list: List[str], day_to_scan: int = 7) -> None:
-        self.strategy = strategy
+    def __init__(self, strategy: List[Strategy], stocks_list: List[str], day_to_scan: int = 7) -> None:
+        self.strategies = strategy
         self.stocks_list = stocks_list
         self.day_to_scan = day_to_scan
         self.short_MA = 20
@@ -38,7 +39,7 @@ class SignalScanner:
         else:
             logger.error("Invalid moving average type")
     
-    async def scan_async(self, sig_types: List[str]):
+    async def scan_async(self):
         curr_time = time.time()
         vtr = vTrade()
         stocks_to_fetch = []
@@ -55,29 +56,17 @@ class SignalScanner:
 
         tasks = []
         for stock in self.stocks_list:
-            for sig_type in sig_types:
-                df = self.cache.get(stock, None)
-                if df is not None:
-                    tasks.append(self.__process_stock_data(stock, df, sig_type))
-                    logger.debug(f"Executing processing task for {stock} - {sig_type}")
-                else:
-                    logger.error(f"Invalid Dataframe while getting from cache {stock} - {sig_type}")
+            df = self.cache.get(stock, None)
+            if df is not None:
+                tasks.append(self.__process_stock_data(stock, df))
+                logger.debug(f"Executing processing task for {stock}")
+            else:
+                logger.error(f"Invalid Dataframe while getting from cache {stock}")
         await asyncio.gather(*tasks)
         self.__show_signals()
 
-    def scan(self, sig_types: List[str]):
-        asyncio.run(self.scan_async(sig_types))
-
-    def scan_MA(self, df: pl.DataFrame) -> pl.DataFrame:
-        return self.strategy.execute(df, self.short_MA, self.long_MA)
-    
-    def scan_RSI(self, df: pl.DataFrame) -> pl.DataFrame:
-        pass
-        # return self.calc_RSI(df)
-
-    def scan_bollinger_bands(self, df: pl.DataFrame) -> pl.DataFrame:
-        pass
-        # return self.calc_bollinger_bands(df)
+    def scan(self):
+        asyncio.run(self.scan_async())
 
     def __signal_regconize(self, df: pl.DataFrame):
         if df is None:
@@ -97,11 +86,11 @@ class SignalScanner:
                 sell_signals[signal_key] = []
                 init = True
 
-            if sig[signal_key] == self.strategy.bin_signal["buy"]:
+            if sig[signal_key] == 1: 
                 buy_signals["datetime"].append(sig["datetime"])
                 buy_signals["close"].append(sig["close"])
                 buy_signals[signal_key].append(sig[signal_key])
-            if sig[signal_key] == self.strategy.bin_signal["sell"]:
+            if sig[signal_key] == 0:
                 sell_signals["datetime"].append(sig["datetime"])
                 sell_signals["close"].append(sig["close"])
                 sell_signals[signal_key].append(sig[signal_key])
@@ -119,17 +108,11 @@ class SignalScanner:
                 logger.info(f"{stock} sell signals: {self.signals[stock]['sell']}")
         logger.warning("========================================== \n")
     
-    async def __process_stock_data(self, stock, df, sig_type):
+    async def __process_stock_data(self, stock, df):
         if df is not None:
-            match sig_type:
-                case "RSI":
-                    df = self.scan_RSI(df)
-                case "BB":
-                    df = self.scan_bollinger_bands(df)
-                case "MA":
-                    df = self.scan_MA(df)
-
-            if df is not None and self.strategy.signal in df.columns:
-                buy_sig, sell_sig = self.__signal_regconize(df)
-                self.signals[stock]["buy"] = pl.DataFrame(buy_sig)
-                self.signals[stock]["sell"] = pl.DataFrame(sell_sig)
+            for strategy in self.strategies:
+                df = strategy.execute(df)
+                if df is not None and strategy.signal in df.columns:
+                    buy_sig, sell_sig = self.__signal_regconize(df)
+                    self.signals[stock]["buy"] = pl.DataFrame(buy_sig)
+                    self.signals[stock]["sell"] = pl.DataFrame(sell_sig)

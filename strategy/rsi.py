@@ -95,7 +95,15 @@ class StrategyRSI(Strategy):
             df = self.execute(df)
         self.fig.data = []
 
-        self.fig.add_trace(go.Scatter(y=df[self.RSI].to_list(), x=df["datetime"].to_list(), name=self.RSI))
+        self.fig.add_trace(go.Scatter(
+                                y=df[self.RSI].to_list(), 
+                                x=df["datetime"].to_list(), 
+                                name=self.RSI,
+                                marker=dict(
+                                    color="antiquewhite"
+                                )
+                            )
+                        )
         self.fig.add_hline(y=upper_bound, line_dash="dash", line_color="red")
         self.fig.add_hline(y=lower_bound, line_dash="dash", line_color="red")
 
