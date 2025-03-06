@@ -5,20 +5,26 @@ from utils import *
 from strategy import Strategy
 
 class CrossingMA(Strategy):
-    def __init__(self):
+    def __init__(self, short_MA: int=20, long_MA: int=50):
         super().__init__()
-        self.short_ma = ""
-        self.long_ma = ""
+        self.short_ma_type = ""
+        self.long_ma_type = ""
+        self.short_ma = short_MA
+        self.long_ma = long_MA
 
     @log_exectime
-    def calc_MA(self, df: pl.DataFrame, length: int, ma_type: str="SMA"):
+    def calc_MA(self, df: pl.DataFrame, length: int=20, ma_type: str="SMA") -> pl.DataFrame:
         if df is None:
             logger.error("DataFrame is None")
             return 
-        
+        if not isinstance(length, int) or not isinstance(ma_type, str):
+            logger.error("Inputs are invalid")
+            return
+
         try:
             col_name = ma_type + str(length)
             if "SMA" == ma_type:
+                # Simple moving average
                 df = df.with_columns(
                     pl.col("high").rolling_mean(window_size=length).alias(col_name),
                 )
@@ -39,22 +45,28 @@ class CrossingMA(Strategy):
         return df
 
     @log_exectime
-    def execute(self, df: pl.DataFrame, short_MA: int, long_MA: int, ma_type: str="SMA") -> pl.DataFrame:
+    def execute(self, df: pl.DataFrame, short_MA: int=20, long_MA: int=50, ma_type: str="SMA") -> pl.DataFrame:
         if not utils.df_is_none(df):
+            if isinstance(short_MA, int) or isinstance(long_MA, int):
+                self.short_ma = short_MA
+                self.long_ma = long_MA
+            else:
+                logger.error("Length of MA is invalid")
+                return df
             try:
-                df = self.calc_MA(df, short_MA, ma_type)
-                df = self.calc_MA(df, long_MA, ma_type)
+                df = self.calc_MA(df, self.short_ma, ma_type)
+                df = self.calc_MA(df, self.long_ma, ma_type)
 
-                self.short_ma = ma_type + str(short_MA)
-                self.long_ma = ma_type + str(long_MA)
-                self.signal = self.__generate_signal(short_MA, long_MA, ma_type)
+                self.short_ma_type = ma_type + str(self.short_ma)
+                self.long_ma_type = ma_type + str(self.long_ma)
+                self.signal = self.__generate_signal(self.short_ma, self.long_ma, ma_type)
 
                 df = df.with_columns([
                     # Short MA crossing over long MA -> buying point
-                    pl.when((pl.col(self.short_ma) > pl.col(self.long_ma)) & (pl.col(self.short_ma).shift(1) <= pl.col(self.long_ma).shift(1)))
+                    pl.when((pl.col(self.short_ma_type) > pl.col(self.long_ma_type)) & (pl.col(self.short_ma_type).shift(1) <= pl.col(self.long_ma_type).shift(1)))
                     .then(self.bin_signal["buy"])
                     # Short MA crossing down long MA -> selling point
-                    .when((pl.col(self.short_ma) < pl.col(self.long_ma)) & (pl.col(self.short_ma).shift(1) >= pl.col(self.long_ma).shift(1)))
+                    .when((pl.col(self.short_ma_type) < pl.col(self.long_ma_type)) & (pl.col(self.short_ma_type).shift(1) >= pl.col(self.long_ma_type).shift(1)))
                     .then(self.bin_signal["sell"])
                     .otherwise(None)
                     .alias(self.signal)

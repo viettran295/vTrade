@@ -6,13 +6,13 @@ import time
 import asyncio
 from strategy.vtrade import vTrade
 
-class SignalScanner(Strategy):
-    def __init__(self, stocks_list: List[str], day_to_scan: int = 7) -> None:
-        super().__init__()
+class SignalScanner:
+    def __init__(self, strategy: Strategy, stocks_list: List[str], day_to_scan: int = 7) -> None:
+        self.strategy = strategy
         self.stocks_list = stocks_list
         self.day_to_scan = day_to_scan
-        self.short_MA = "SMA20"
-        self.long_MA = "SMA100"
+        self.short_MA = 20
+        self.long_MA = 50
         self.signals = {
             s: {
                 "buy": pl.DataFrame,
@@ -69,15 +69,15 @@ class SignalScanner(Strategy):
         asyncio.run(self.scan_async(sig_types))
 
     def scan_MA(self, df: pl.DataFrame) -> pl.DataFrame:
-        df = self.calc_MA(df, self.short_MA)
-        df = self.calc_MA(df, self.long_MA)
-        return self.calc_crossing_MA(df, self.short_MA, self.long_MA)
+        return self.strategy.execute(df, self.short_MA, self.long_MA)
     
     def scan_RSI(self, df: pl.DataFrame) -> pl.DataFrame:
-        return self.calc_RSI(df)
+        pass
+        # return self.calc_RSI(df)
 
     def scan_bollinger_bands(self, df: pl.DataFrame) -> pl.DataFrame:
-        return self.calc_bollinger_bands(df)
+        pass
+        # return self.calc_bollinger_bands(df)
 
     def __signal_regconize(self, df: pl.DataFrame):
         if df is None:
@@ -97,16 +97,16 @@ class SignalScanner(Strategy):
                 sell_signals[signal_key] = []
                 init = True
 
-            if sig[signal_key] == self.signal["buy"]:
+            if sig[signal_key] == self.strategy.bin_signal["buy"]:
                 buy_signals["datetime"].append(sig["datetime"])
                 buy_signals["close"].append(sig["close"])
                 buy_signals[signal_key].append(sig[signal_key])
-            if sig[signal_key] == self.signal["sell"]:
+            if sig[signal_key] == self.strategy.bin_signal["sell"]:
                 sell_signals["datetime"].append(sig["datetime"])
                 sell_signals["close"].append(sig["close"])
                 sell_signals[signal_key].append(sig[signal_key])
                 
-            logger.info("Recognized sell-buy signal")
+        logger.info("Recognized sell-buy signal")
 
         return buy_signals, sell_signals
     
@@ -129,7 +129,7 @@ class SignalScanner(Strategy):
                 case "MA":
                     df = self.scan_MA(df)
 
-            if df is not None and self.sell_buy_sig in df.columns:
+            if df is not None and self.strategy.signal in df.columns:
                 buy_sig, sell_sig = self.__signal_regconize(df)
                 self.signals[stock]["buy"] = pl.DataFrame(buy_sig)
                 self.signals[stock]["sell"] = pl.DataFrame(sell_sig)
