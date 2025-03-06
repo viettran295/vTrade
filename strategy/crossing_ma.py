@@ -94,6 +94,7 @@ class StrategyCrossingMA(Strategy):
         signal_sell = df.filter(df[self.signal] == 0)
         
         self.fig.data = []
+
         self.fig = self.show_stock_price(df)
 
         self.fig.add_trace(go.Scatter(
@@ -101,7 +102,7 @@ class StrategyCrossingMA(Strategy):
                                 y=df[f"{self.short_ma_type}"].to_list(),
                                 name=f"{self.short_ma_type}",
                                 marker=dict(
-                                    color="antiquewhite"
+                                    color="fuchsia"
                                 )
                             )
             )
@@ -111,7 +112,7 @@ class StrategyCrossingMA(Strategy):
                                 y=df[f"{self.long_ma_type}"].to_list(),
                                 name=f"{self.long_ma_type}",
                                 marker=dict(
-                                    color="lightblue"
+                                    color="gold"
                                 )
                             )
             )
@@ -119,9 +120,11 @@ class StrategyCrossingMA(Strategy):
         self.fig.add_trace(go.Scatter(
                                 x=signal_buy["datetime"].to_list(),
                                 y=signal_buy[self.short_ma_type].to_list(), mode="markers",
-                                marker=dict(size=9, 
-                                            symbol="triangle-up",
-                                            color="green"), 
+                                marker=dict(
+                                    size=12, 
+                                    symbol="triangle-up",
+                                    color="green"
+                                ), 
                                 name="Buying signal"
                             )
             )
@@ -129,8 +132,11 @@ class StrategyCrossingMA(Strategy):
         self.fig.add_trace(go.Scatter(
                                 x=signal_sell["datetime"].to_list(),
                                 y=signal_sell[self.short_ma_type].to_list(), mode="markers",
-                                marker=dict(size=9, symbol="triangle-down",
-                                            color="red"), 
+                                marker=dict(
+                                    size=12, 
+                                    symbol="triangle-down",
+                                    color="red"
+                                ), 
                                 name="Selling signal"
                             )
             )

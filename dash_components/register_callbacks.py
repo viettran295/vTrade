@@ -1,6 +1,6 @@
 from dash import callback, Input, Output, State, exceptions
 from utils import *
-from strategy import Strategy
+from strategy import StrategyCrossingMA, vTrade
 from .dash_crossing_ma import DashCrossingMA
 from .dash_backtesting import DashBackTesting
 from .dash_checklist import DashChecklist
@@ -16,6 +16,8 @@ class RegisterCallbacks():
         self.db = ConnectDB()
         self.tabs = DashTabs()
         self.not_display = {}, {"display": "none"}
+        self.vtrade = vTrade()
+        self.strategy_x_ma = StrategyCrossingMA()
 
     def register_RMS_plot_callbacks(self):
         @callback(
@@ -36,7 +38,7 @@ class RegisterCallbacks():
             search_stock,
             short_ma: int = 20,
             long_ma: int = 50,
-            ma_types: str = "SMA",
+            ma_type: str = "SMA",
         ):
             if stock_data_store is None or len(stock_data_store) == 0:
                 return self.not_display
@@ -44,37 +46,28 @@ class RegisterCallbacks():
             df = self.db.get_stock_data(search_stock)
             if df is None:
                 return self.not_display
-            
-            strategy = Strategy()
-
+                
             # Early return without calculating crossing MA
             if not checklist or self.checklist.x_ma_val not in checklist:
-                return strategy.show_stock_price(df), {"display": "block"}
+                return self.vtrade.show_stock_price(df), {"display": "block"}
 
-            short_ma = ma_types + str(short_ma)
-            long_ma= ma_types + str(long_ma)
-            x_ma = f"{strategy.sell_buy_sig}_{short_ma}_{long_ma}"
-            # Calculate missing indicators
-            if short_ma not in df.columns:
-                df = strategy.calc_MA(df, short_ma)
-            if long_ma not in df.columns:
-                df = strategy.calc_MA(df, long_ma)
-            if x_ma not in df.columns:
-                df = strategy.calc_crossing_MA(df, short_ma, long_ma)
+            try:
+                df = self.strategy_x_ma.execute(df, short_ma, long_ma, ma_type)
                 self.db.update_columns(
                     df,
                     search_stock, 
                     {
-                        short_ma: "FLOAT", 
-                        long_ma: "FLOAT", 
-                        x_ma: "FLOAT"
+                        self.strategy_x_ma.short_ma_type: "FLOAT", 
+                        self.strategy_x_ma.long_ma_type: "FLOAT", 
+                        self.strategy_x_ma.signal: "FLOAT"
                     },
-                    strategy.columns[0]
+                    df.columns[0]
                 )
-            if df is not None:
-                return strategy.show_crossing_MA(df, short_ma, long_ma), {"display": "block"}
-            
-            return self.not_display
+                if df is not None:
+                    return self.strategy_x_ma.show(df, short_ma, long_ma, ma_type), {"display": "block"}
+            except Exception as e:
+                logger.error(f"Error plotting crossing MA: {e}")
+                return self.not_display
     
             
     def register_backtest_plot_callback(self):
