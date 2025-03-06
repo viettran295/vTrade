@@ -4,7 +4,7 @@ from loguru import logger
 from utils import *
 from strategy import Strategy
 
-class CrossingMA(Strategy):
+class StrategyCrossingMA(Strategy):
     def __init__(self, short_MA: int=20, long_MA: int=50):
         super().__init__()
         self.short_ma_type = ""
@@ -59,7 +59,7 @@ class CrossingMA(Strategy):
 
                 self.short_ma_type = ma_type + str(self.short_ma)
                 self.long_ma_type = ma_type + str(self.long_ma)
-                self.signal = self.__generate_signal(self.short_ma, self.long_ma, ma_type)
+                self.signal = self.__generate_signal_cfg_name(self.short_ma, self.long_ma, ma_type)
 
                 df = df.with_columns([
                     # Short MA crossing over long MA -> buying point
@@ -82,14 +82,14 @@ class CrossingMA(Strategy):
     
     def show(self, df: pl.DataFrame, short_MA: int, long_MA: int, ma_type: str="SMA") -> go.Figure:
         if not utils.df_is_none(df):
-            if self.short_ma == "" or self.long_ma == "":
+            if self.short_ma_type == "" or self.long_ma_type == "":
                 logger.debug("Dataframe columns do not contain MA types")
                 df = self.execute(df, short_MA, long_MA, ma_type)
         else:
             logger.error(f"Dataframe for MA calculation is None")
             return
 
-        self.signal = self.__generate_signal(short_MA, long_MA, ma_type)
+        self.signal = self.__generate_signal_cfg_name(short_MA, long_MA, ma_type)
         signal_buy = df.filter(df[self.signal] == 1)
         signal_sell = df.filter(df[self.signal] == 0)
         
@@ -98,8 +98,8 @@ class CrossingMA(Strategy):
 
         self.fig.add_trace(go.Scatter(
                                 x=df["datetime"].to_list(),
-                                y=df[f"{self.short_ma}"].to_list(),
-                                name=f"{self.short_ma}",
+                                y=df[f"{self.short_ma_type}"].to_list(),
+                                name=f"{self.short_ma_type}",
                                 marker=dict(
                                     color="antiquewhite"
                                 )
@@ -108,8 +108,8 @@ class CrossingMA(Strategy):
         
         self.fig.add_trace(go.Scatter(
                                 x=df["datetime"].to_list(),
-                                y=df[f"{self.long_ma}"].to_list(),
-                                name=f"{self.long_ma}",
+                                y=df[f"{self.long_ma_type}"].to_list(),
+                                name=f"{self.long_ma_type}",
                                 marker=dict(
                                     color="lightblue"
                                 )
@@ -118,7 +118,7 @@ class CrossingMA(Strategy):
             
         self.fig.add_trace(go.Scatter(
                                 x=signal_buy["datetime"].to_list(),
-                                y=signal_buy[self.short_ma].to_list(), mode="markers",
+                                y=signal_buy[self.short_ma_type].to_list(), mode="markers",
                                 marker=dict(size=9, 
                                             symbol="triangle-up",
                                             color="green"), 
@@ -128,7 +128,7 @@ class CrossingMA(Strategy):
 
         self.fig.add_trace(go.Scatter(
                                 x=signal_sell["datetime"].to_list(),
-                                y=signal_sell[self.short_ma].to_list(), mode="markers",
+                                y=signal_sell[self.short_ma_type].to_list(), mode="markers",
                                 marker=dict(size=9, symbol="triangle-down",
                                             color="red"), 
                                 name="Selling signal"
@@ -144,5 +144,5 @@ class CrossingMA(Strategy):
                 )
         return self.fig
     
-    def __generate_signal(self, short_MA: int, long_MA: int, ma_type: str="SMA"):
+    def __generate_signal_cfg_name(self, short_MA: int, long_MA: int, ma_type: str="SMA"):
         return f"Signal_{ma_type}_{short_MA}_{long_MA}"
