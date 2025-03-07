@@ -2,6 +2,7 @@ from dash import html
 import dash_bootstrap_components as dbc
 from .dash_crossing_ma import DashCrossingMA
 from .dash_backtesting import DashBackTesting
+from .dash_rsi import DashRSI
 
 class DashTabs():
     def __init__(self):
@@ -11,6 +12,7 @@ class DashTabs():
         self.paper_trading_id = "pt-id"
 
         self.x_ma = DashCrossingMA()
+        self.rsi = DashRSI()
         self.dash_bt = DashBackTesting()
 
     def layout(self):
@@ -24,6 +26,8 @@ class DashTabs():
                             children=[
                                 html.Br(),
                                 self.x_ma.layout(),
+                                html.Br(),
+                                self.rsi.layout(),
                             ],
                             active_tab_style={
                                 "fontStyle": "italic",

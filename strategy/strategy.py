@@ -4,10 +4,6 @@ from utils import *
 from abc import ABC, abstractmethod
 
 class Strategy(ABC):
-    
-    fig = go.Figure()
-    fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
-
     def __init__(self) -> None:
         self.columns = ["datetime", "open", "close", "high", "low"]
         self.signal = ""
@@ -25,19 +21,21 @@ class Strategy(ABC):
         return
     
     def show_stock_price(self, df: pl.DataFrame) -> go.Figure:
-        self.fig.data = []
-        self.fig.add_trace(go.Bar(
+        fig = go.Figure()
+        fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
+
+        fig.add_trace(go.Bar(
                         x=df["datetime"].to_list(), 
                         y=df["close"].to_list(), 
                         name="Close price",
                         marker=dict(color='white')
                     )
         )
-        self.fig.update_layout(
+        fig.update_layout(
             title={
                 "text": "Stock Price",
                 "x": 0.5
             },
             font=dict(size=18),
         )
-        return self.fig
+        return fig

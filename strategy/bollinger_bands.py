@@ -47,11 +47,12 @@ class StrategyBollingerBands(Strategy):
         overbound = df.filter((pl.col("high") > pl.col(self.upper_band)))
         underbound = df.filter((pl.col("low") < pl.col(self.lower_band)))
 
-        self.fig.data = []
+        fig = go.Figure()
+        fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
         # Remove horizontal lines if exist
-        self.fig.layout.pop('shapes')
+        # self.fig.layout.pop('shapes')
 
-        self.fig.add_trace(go.Candlestick(
+        fig.add_trace(go.Candlestick(
                                 x=df["datetime"].to_list(),
                                 open=df["open"].to_list(), 
                                 close=df["close"].to_list(), 
@@ -60,19 +61,19 @@ class StrategyBollingerBands(Strategy):
                                 name=self.title,
                             )
                         )
-        self.fig.add_trace(go.Scatter(
+        fig.add_trace(go.Scatter(
                         x=df["datetime"].to_list(),
                         y=df[self.strategy_x_ma.short_ma_type].to_list(),
                         name=self.strategy_x_ma.short_ma_type,
                     )
                 )
-        self.fig.add_trace(go.Scatter(
+        fig.add_trace(go.Scatter(
                         x=df["datetime"].to_list(),
                         y=df[self.lower_band].to_list(),
                         name=self.lower_band,
                     )
                 )
-        self.fig.add_trace(go.Scatter(
+        fig.add_trace(go.Scatter(
                         x=df["datetime"].to_list(),
                         y=df[self.upper_band].to_list(),
                         name=self.upper_band,
@@ -80,21 +81,21 @@ class StrategyBollingerBands(Strategy):
                         opacity=0.1
                     )
                 )
-        self.fig.add_trace(go.Scatter(
+        fig.add_trace(go.Scatter(
                         x=overbound["datetime"].to_list(),
                         y=overbound["high"].to_list(),
                         name="Over bought",
                         mode="markers",
                     )           
                 )
-        self.fig.add_trace(go.Scatter(
+        fig.add_trace(go.Scatter(
                         x=underbound["datetime"].to_list(),
                         y=underbound["low"].to_list(),
                         name="Over sell",
                         mode="markers",
                     )           
                 )
-        self.fig.update_layout(
+        fig.update_layout(
                         title={
                             "text": self.title,
                             "xanchor": "center",
@@ -102,4 +103,4 @@ class StrategyBollingerBands(Strategy):
                         },
                         font=dict(size=18)
                 )
-        return self.fig
+        return fig

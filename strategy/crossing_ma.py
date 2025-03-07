@@ -93,11 +93,12 @@ class StrategyCrossingMA(Strategy):
         signal_buy = df.filter(df[self.signal] == 1)
         signal_sell = df.filter(df[self.signal] == 0)
         
-        self.fig.data = []
+        fig = go.Figure()
+        fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
 
-        self.fig = self.show_stock_price(df)
+        fig = self.show_stock_price(df)
 
-        self.fig.add_trace(go.Scatter(
+        fig.add_trace(go.Scatter(
                                 x=df["datetime"].to_list(),
                                 y=df[f"{self.short_ma_type}"].to_list(),
                                 name=f"{self.short_ma_type}",
@@ -107,7 +108,7 @@ class StrategyCrossingMA(Strategy):
                             )
             )
         
-        self.fig.add_trace(go.Scatter(
+        fig.add_trace(go.Scatter(
                                 x=df["datetime"].to_list(),
                                 y=df[f"{self.long_ma_type}"].to_list(),
                                 name=f"{self.long_ma_type}",
@@ -117,7 +118,7 @@ class StrategyCrossingMA(Strategy):
                             )
             )
             
-        self.fig.add_trace(go.Scatter(
+        fig.add_trace(go.Scatter(
                                 x=signal_buy["datetime"].to_list(),
                                 y=signal_buy[self.short_ma_type].to_list(), mode="markers",
                                 marker=dict(
@@ -129,7 +130,7 @@ class StrategyCrossingMA(Strategy):
                             )
             )
 
-        self.fig.add_trace(go.Scatter(
+        fig.add_trace(go.Scatter(
                                 x=signal_sell["datetime"].to_list(),
                                 y=signal_sell[self.short_ma_type].to_list(), mode="markers",
                                 marker=dict(
@@ -141,14 +142,14 @@ class StrategyCrossingMA(Strategy):
                             )
             )
         
-        self.fig.update_layout(
+        fig.update_layout(
                     title={
                         "text": "Crossing MA",
                         "x": 0.5
                     },
                     font=dict(size=18)
                 )
-        return self.fig
+        return fig
     
     def __generate_signal_cfg_name(self, short_MA: int, long_MA: int, ma_type: str="SMA"):
         return f"Signal_{ma_type}_{short_MA}_{long_MA}"

@@ -1,7 +1,6 @@
 from dash import html, dcc
 import utils
 import dash_bootstrap_components as dbc
-from .dash_backtesting import DashBackTesting
 
 class DashCrossingMA():
     def __init__(self):

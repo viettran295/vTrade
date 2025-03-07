@@ -12,7 +12,7 @@ class StrategyRSI(Strategy):
     avg_gain = "avg_gain"
     avg_loss = "avg_loss"
     RS = "RS"
-    RSI = "self"
+    RSI = "RSI"
 
     def __init__(self, period: int=14, upper_bound: int=80, lower_bound: int=20):
         super().__init__()
@@ -93,9 +93,12 @@ class StrategyRSI(Strategy):
         if not utils.check_list_substr_in_str(["RSI", "datetime"], df.columns):
             logger.debug("Dataframe columns do not contain RSI")
             df = self.execute(df)
-        self.fig.data = []
 
-        self.fig.add_trace(go.Scatter(
+        fig = go.Figure()
+        fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
+
+
+        fig.add_trace(go.Scatter(
                                 y=df[self.RSI].to_list(), 
                                 x=df["datetime"].to_list(), 
                                 name=self.RSI,
@@ -104,24 +107,24 @@ class StrategyRSI(Strategy):
                                 )
                             )
                         )
-        self.fig.add_hline(y=upper_bound, line_dash="dash", line_color="red")
-        self.fig.add_hline(y=lower_bound, line_dash="dash", line_color="red")
+        fig.add_hline(y=upper_bound, line_dash="dash", line_color="red")
+        fig.add_hline(y=lower_bound, line_dash="dash", line_color="red")
 
         overbougt = df.filter(pl.col(self.RSI) > upper_bound)
         oversold = df.filter(pl.col(self.RSI) < lower_bound)
-        self.fig.add_trace(go.Scatter(y=overbougt[self.RSI].to_list(), x=overbougt["datetime"].to_list(), 
+        fig.add_trace(go.Scatter(y=overbougt[self.RSI].to_list(), x=overbougt["datetime"].to_list(), 
                                       mode="markers", marker=dict(color='red'), name="Over bought"))
-        self.fig.add_trace(go.Scatter(y=oversold[self.RSI].to_list(), x=oversold["datetime"].to_list(), 
+        fig.add_trace(go.Scatter(y=oversold[self.RSI].to_list(), x=oversold["datetime"].to_list(), 
                                       mode="markers", marker=dict(color="green"), name="Over sold"))
 
-        self.fig.update_layout(
+        fig.update_layout(
                     title={
                         "text": "Relative strength index (RSI) plot",
                         "x": 0.5
                     },
                     font=dict(size=18)
                 )
-        return self.fig
+        return fig
 
     def __generate_signal_cfg_name(self, period: int, upper_bound: int, lower_bound: int) -> str:
         return f"Signal_RSI_P{period}_U{upper_bound}_L{lower_bound}"

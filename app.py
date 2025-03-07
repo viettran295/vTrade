@@ -2,11 +2,11 @@ from dash import Dash, html, callback, Input, Output, State, dcc
 import dash
 import dash_bootstrap_components as dbc
 import utils
+from utils import vTrade
 from dash_components import RegisterCallbacks, ConnectDB
 from dotenv import load_dotenv
 load_dotenv()
 from loguru import logger
-from strategy import vTrade
 import asyncio
 
 dbc_css = "https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/minty/bootstrap.min.css"
@@ -25,6 +25,7 @@ app.layout = dbc.Container(
     style = {
         "backgroundColor": utils.colors["background"],
          "height": "100vh",
+         "overflow": "hidden"
     },
     children = [
         dbc.Row(
@@ -109,13 +110,17 @@ app.layout = dbc.Container(
                             ], 
                         )
                     ],
-                    width=2
+                    width=2,
                 ),
                 # Main Content
                 dbc.Col(
                     [
                         rc.tabs.layout()
                     ],
+                    style={
+                        "maxHeight": "900px",  # Set a max height
+                        "overflowY": "auto",  # Enable vertical scrolling when needed
+                    },
                 )
             ],
             className="gx-0",
@@ -155,8 +160,9 @@ def update_stock_data(_, search_stock):
     except Exception as _:
         return dash.no_update
 
-rc.register_RMS_plot_callbacks()
+rc.register_MA_plot_callbacks()
 rc.register_backtest_plot_callback()
+rc.register_RSI_plot_callback()
 
 if __name__ == "__main__":
     app.run_server(debug=True)
