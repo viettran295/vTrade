@@ -8,13 +8,15 @@ load_dotenv()
 from loguru import logger
 from strategy import vTrade
 import asyncio
+from PIL import Image
 
 dbc_css = "https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/minty/bootstrap.min.css"
 
 app = Dash(
-    title="__vTrade__",
-    external_stylesheets=[dbc.themes.DARKLY, dbc_css]
+    title="Trust the Algorithms",
+    external_stylesheets=[dbc.themes.DARKLY, dbc_css, dbc.icons.FONT_AWESOME]
 )
+app._favicon = "bull_icon.ico"
 
 rc = RegisterCallbacks()
 db_conn = ConnectDB()
@@ -26,17 +28,36 @@ app.layout = dbc.Container(
          "height": "100vh",
     },
     children = [
-        dbc.Row([
-            dbc.Col([
-                html.H1(
-                    "vTrade App",
-                    style={
-                        "textAlign": "center",
-                        "color": utils.colors["text"],
-                    }
+        dbc.Row(
+            [                
+                dbc.Col(
+                    [
+                        html.Div(
+                            children=[
+                                html.Img(src="assets/bull_icon.png"),
+                            ],
+                            style={
+                                "display": "flex",
+                                "justify-content": "right",
+                            }
+                        )
+                    ],
+                    width=5
                 ),
-            ])
-        ]),
+                dbc.Col(
+                    [
+                        html.H1(
+                            "Trust the Algorithms",
+                            style={
+                                "textAlign": "left",
+                                "color": utils.colors["text"],
+                            }
+                        ),
+                    ],
+                    width=5
+                )
+            ],
+        ),
         html.Br(),
         dbc.Row(
             [
