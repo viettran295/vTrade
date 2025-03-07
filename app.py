@@ -8,7 +8,6 @@ load_dotenv()
 from loguru import logger
 from strategy import vTrade
 import asyncio
-from PIL import Image
 
 dbc_css = "https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/minty/bootstrap.min.css"
 
