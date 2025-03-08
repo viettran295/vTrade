@@ -46,7 +46,7 @@ class BackTesting:
         for row in self.data.to_dicts():
             if row[strategy] == 1 and self.position == 1:
                 self.position = 0
-                shares_to_buy = order_size // row["close"]
+                shares_to_buy = int(order_size // row["close"])
                 self.nr_shares += shares_to_buy
                 self.cash -= shares_to_buy * row["close"]
             elif row[strategy] == 0 and self.position == 0:
@@ -59,16 +59,19 @@ class BackTesting:
                 continue
 
             datetime_data.append(row["datetime"])
-            cash_data.append(self.cash)
-            nr_shares_data.append(self.nr_shares)
+            cash_data.append(float(self.cash))
+            nr_shares_data.append(int(self.nr_shares))
             profit_data.append(((self.cash - self.init_cash) / self.init_cash * 100))
 
-        self.results = pl.DataFrame({
-            self.datetime_col: datetime_data,
-            self.cash_col: cash_data,
-            self.number_shares_col: nr_shares_data,
-            self.profit_col: profit_data
-        })
+        self.results = pl.DataFrame(
+                            data={
+                                self.datetime_col: datetime_data,
+                                self.cash_col: cash_data,
+                                self.number_shares_col: nr_shares_data,
+                                self.profit_col: profit_data
+                            },
+                            # strict=False
+                        )
 
     def report(self):
         logger.info("================ Report ====================")

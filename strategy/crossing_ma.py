@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 from loguru import logger
 from utils import *
 from strategy import Strategy
+import numpy as np
 
 class StrategyCrossingMA(Strategy):
     def __init__(self, short_MA: int=20, long_MA: int=50):
@@ -17,7 +18,7 @@ class StrategyCrossingMA(Strategy):
         if df is None:
             logger.error("DataFrame is None")
             return 
-        if not isinstance(length, int) or not isinstance(ma_type, str):
+        if not isinstance(length, (int,np.integer)) or not isinstance(ma_type, str):
             logger.error("Inputs are invalid")
             return
 
@@ -28,13 +29,13 @@ class StrategyCrossingMA(Strategy):
                 df = df.with_columns(
                     pl.col("high").rolling_mean(window_size=length).alias(self.short_ma_type),
                 )
-                logger.info("SMA is calculated")
-            elif "EWM" == ma_type:
+                logger.info(f"SMA {length} is calculated")
+            elif "EWM" == ma_type: 
                 # Exponentially weighted moving average
                 df = df.with_columns(
                         pl.col("high").ewm_mean(span=length).alias(self.short_ma_type),
                     )
-                logger.info("EWM is calculated")
+                logger.info(f"EWM {length} is calculated")
             else:
                 logger.warning("Moving average type is not supported")
                 return
@@ -47,7 +48,7 @@ class StrategyCrossingMA(Strategy):
     @log_exectime
     def execute(self, df: pl.DataFrame, short_MA: int=20, long_MA: int=50, ma_type: str="SMA") -> pl.DataFrame:
         if not utils.df_is_none(df):
-            if isinstance(short_MA, int) or isinstance(long_MA, int):
+            if isinstance(short_MA, (int, np.integer)) or isinstance(long_MA, (int, np.integer)):
                 self.short_ma = short_MA
                 self.long_ma = long_MA
             else:
@@ -71,25 +72,27 @@ class StrategyCrossingMA(Strategy):
                     .otherwise(None)
                     .alias(self.signal)
                 ])
-                logger.info("Sell-buy signal for crossing MA is generated")
+                logger.info(f"Sell-buy signal for crossing MA {self.short_ma} - {self.long_ma} is generated")
                 return df
             except Exception as e:
-                logger.error(f"Error while implementing Cross MA: {e}")
+                logger.error(f"Error while implementing Cross MA {self.short_ma} - {self.long_ma}: {e}")
                 return
         else:
             logger.error("DataFrame is None")
             return df
     
     def show(self, df: pl.DataFrame, short_MA: int, long_MA: int, ma_type: str="SMA") -> go.Figure:
-        if not utils.df_is_none(df):
-            if self.short_ma_type == "" or self.long_ma_type == "":
-                logger.debug("Dataframe columns do not contain MA types")
-                df = self.execute(df, short_MA, long_MA, ma_type)
-        else:
-            logger.error(f"Dataframe for MA calculation is None")
+        if utils.df_is_none(df):
+            logger.error("Dataframe for MA calculation is None")
             return
 
         self.signal = self.__generate_signal_cfg_name(short_MA, long_MA, ma_type)
+        if self.signal not in df.columns:
+            logger.error("Signal for crossing MA is not calculated")
+            return
+        self.short_ma_type = ma_type + str(short_MA)
+        self.long_ma_type = ma_type + str(long_MA)
+        
         signal_buy = df.filter(df[self.signal] == 1)
         signal_sell = df.filter(df[self.signal] == 0)
         
