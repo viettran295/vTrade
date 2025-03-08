@@ -24,11 +24,13 @@ class Strategy(ABC):
         fig = go.Figure()
         fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
 
-        fig.add_trace(go.Bar(
-                        x=df["datetime"].to_list(), 
-                        y=df["close"].to_list(), 
+        fig.add_trace(go.Candlestick(
+                        x=df["datetime"].to_list(),
+                        open=df["open"].to_list(), 
+                        close=df["close"].to_list(), 
+                        high=df["high"].to_list(),
+                        low=df["low"].to_list(),
                         name="Close price",
-                        marker=dict(color='white')
                     )
         )
         fig.update_layout(

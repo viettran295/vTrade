@@ -106,7 +106,7 @@ class StrategyCrossingMA(Strategy):
                                 y=df[f"{self.short_ma_type}"].to_list(),
                                 name=f"{self.short_ma_type}",
                                 marker=dict(
-                                    color="fuchsia"
+                                    color="aquamarine"
                                 )
                             )
             )
@@ -115,8 +115,9 @@ class StrategyCrossingMA(Strategy):
                                 x=df["datetime"].to_list(),
                                 y=df[f"{self.long_ma_type}"].to_list(),
                                 name=f"{self.long_ma_type}",
+                                fill='tonexty',
                                 marker=dict(
-                                    color="gold"
+                                    color="white"
                                 )
                             )
             )
@@ -127,7 +128,7 @@ class StrategyCrossingMA(Strategy):
                                 marker=dict(
                                     size=12, 
                                     symbol="triangle-up",
-                                    color="green"
+                                    color="lawngreen"
                                 ), 
                                 name="Buying signal"
                             )
