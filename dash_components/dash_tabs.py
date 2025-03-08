@@ -42,7 +42,9 @@ class DashTabs():
                             label="Backtesting", 
                             children=[
                                 html.Br(),
-                                self.dash_bt.layout(),
+                                self.dash_bt.layout_crossing_ma(),
+                                html.Br(),
+                                self.dash_bt.layout_rsi(),
                             ],
                             active_tab_style={
                                 "fontStyle": "italic",

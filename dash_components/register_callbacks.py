@@ -115,18 +115,56 @@ class RegisterCallbacks():
                 return self.not_display
             
     def register_backtest_plot_callback(self):
-        @callback (
-            Output(self.dash_bt.backtest_graph, "figure"),
+        @callback(
+            Output(self.dash_bt.x_ma_graph_id, "figure"),
+            Output(self.dash_bt.x_ma_graph_id, "style"),
+            Output(self.dash_bt.rsi_graph_id, "figure"),
+            Output(self.dash_bt.rsi_graph_id, "style"),
+
             Input(self.tabs.id_layout, "active_tab"),
+            Input(self.checklist.id, "value"),
+
             State("search-stock", "value"),
-            prevent_initial_call = True
+            State(self.x_ma.short_ma_input, "value"),
+            State(self.x_ma.long_ma_input, "value"),
+            State(self.x_ma.ma_types, "value"),
+            prevent_initial_call=True,
         )
-        def plot_backtest(tab_id, search_stock):
+        def plot_backtest(
+            tab_id: str,
+            checklist: str,
+            search_stock: str,
+            short_ma: int = 20,
+            long_ma: int = 50,
+            ma_type: str = "SMA",
+        ):
+            x_ma_output = self.not_display
+            rsi_output = self.not_display
+
             if tab_id == self.tabs.backtesting_id:
                 df = self.db.get_stock_data(search_stock)
+                if df_is_none(df):
+                    return *x_ma_output, *rsi_output
+
                 bt = BackTesting()
                 bt.set_data(df)
-                bt.run(self.strategy_name)
-                return bt.show_report(self.strategy_name)
-            else:
-                raise exceptions.PreventUpdate 
+
+                if self.checklist.x_ma_val in checklist:
+                    try:
+                        self.strategy_name = f"Signal_{ma_type}_{short_ma}_{long_ma}"
+                        bt.run(self.strategy_name)
+                        x_ma_output = bt.show_report(self.strategy_name), self.display
+                    except Exception as e:
+                        logger.error(f"Error backtesting {self.strategy_name}: {e}")
+                        x_ma_output = self.not_display
+
+                if self.checklist.rsi_val in checklist:
+                    try:
+                        self.strategy_name = "Signal_RSI_P14_U80_L20"
+                        bt.run(self.strategy_name)
+                        rsi_output = bt.show_report(self.strategy_name), self.display
+                    except Exception as e:
+                        logger.error(f"Error backtesting {self.strategy_name}: {e}")
+                        rsi_output = self.not_display
+
+            return *x_ma_output, *rsi_output
