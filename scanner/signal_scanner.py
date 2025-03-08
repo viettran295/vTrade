@@ -5,7 +5,7 @@ from typing import List
 import time
 import asyncio
 from typing import List
-from strategy.vtrade import vTrade
+from utils.vtrade import vTrade
 
 class SignalScanner:
     def __init__(self, strategy: List[Strategy], stocks_list: List[str], day_to_scan: int = 7) -> None:

@@ -1,18 +1,24 @@
 from dotenv import load_dotenv
 load_dotenv()
 import os
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import polars as pl 
 from loguru import logger
 import asyncio
 import aiohttp
+import websockets
+import json
 from typing import Tuple, List
+import time
+import threading
+import socket
 
 class vTrade():
     def __init__(self) -> None:
         self.end_date = date.today() - timedelta(days=1)
         self.start_date = self.end_date - timedelta(days=365*3)
         self.api_key = os.getenv("12_DATA_KEY")
+        self.coincap_key = os.getenv("COINCAP_KEY")
     
     async def get_stocks_async(self, stocks: List[str]) -> dict:
         results = {} 
@@ -57,3 +63,37 @@ class vTrade():
             return symbol, df
         else:
             return symbol, None
+    
+    async def connect_websocket(self, asset: str="bitcoin"):
+        uri = f"wss://ws.coincap.io/prices?assets={asset}"
+
+        async with websockets.connect(uri) as ws:
+            logger.debug("Connecting to websockets...")
+            try:
+                while True:
+                    mess = await ws.recv()
+                    data = json.loads(mess)
+                    if data:
+                        price = data[f"{asset}"]
+                        timestamp = datetime.now()
+                        logger.info(f"Timestamp: {timestamp} - Price: {price}")
+                    await self.__close_websocket(ws, 1)
+
+            except websockets.exceptions.ConnectionClosedOK:
+                logger.debug("WebSocket connection closed gracefully.")
+            except Exception as e:
+                logger.error(f"WebSocket error: {e}") 
+            
+    @staticmethod
+    async def __close_websocket(socket, after_mins: int=5):
+        try:
+            await asyncio.sleep(60 * after_mins)
+            await socket.close()
+            logger.debug(f"Socket closed after {after_mins} minutes.")
+        except OSError as e:
+            logger.error(f"Error closing socket: {e}")
+
+
+if __name__ == "__main__":
+    vtr = vTrade()
+    asyncio.run(vtr.connect_websocket())
