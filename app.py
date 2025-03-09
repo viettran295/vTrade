@@ -143,7 +143,7 @@ async def fetch_stock(search_stock):
     df = resp[search_stock]
     if df is not None and not df.is_empty():
         db_conn.create_table(df, search_stock)
-        return df.to_dict(as_series=False)
+        return df.write_json()
     else:
         logger.debug(f"No data for {search_stock} is fetched")
         return {}
@@ -163,6 +163,7 @@ def update_stock_data(_, search_stock):
 rc.register_MA_plot_callbacks()
 rc.register_backtest_plot_callback()
 rc.register_RSI_plot_callback()
+rc.register_backtest_buttons_callback()
 
 if __name__ == "__main__":
     app.run_server(debug=True)

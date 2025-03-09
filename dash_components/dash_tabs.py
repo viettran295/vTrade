@@ -27,7 +27,11 @@ class DashTabs():
                                 html.Br(),
                                 self.x_ma.layout(),
                                 html.Br(),
+                                self.dash_bt.layout_crossing_ma(),
+                                html.Br(),
                                 self.rsi.layout(),
+                                html.Br(),
+                                self.dash_bt.layout_rsi(),
                             ],
                             active_tab_style={
                                 "fontStyle": "italic",
@@ -39,12 +43,10 @@ class DashTabs():
                         ),
                         dbc.Tab(
                             tab_id=self.backtesting_id,
-                            label="Backtesting", 
+                            label="Pattern recognition", 
                             children=[
-                                html.Br(),
-                                self.dash_bt.layout_crossing_ma(),
-                                html.Br(),
-                                self.dash_bt.layout_rsi(),
+
+
                             ],
                             active_tab_style={
                                 "fontStyle": "italic",

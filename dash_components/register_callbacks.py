@@ -1,6 +1,7 @@
 from dash import callback, Input, Output, State, exceptions
 from utils import *
 from strategy import StrategyCrossingMA, StrategyRSI
+import dash
 
 from .dash_crossing_ma import DashCrossingMA
 from .dash_rsi import DashRSI
@@ -84,7 +85,7 @@ class RegisterCallbacks():
     def register_RSI_plot_callback(self):
         @callback (
             Output(self.dash_rsi.rsi_graph_id, "figure"),
-            Output(self.dash_rsi.rsi_graph_id, "style"),
+            Output(self.dash_rsi.id_layout, "style"),
             Input(self.checklist.id, "value"),
             State("search-stock", "value"),
         )
@@ -118,10 +119,9 @@ class RegisterCallbacks():
         @callback(
             Output(self.dash_bt.x_ma_graph_id, "figure"),
             Output(self.dash_bt.x_ma_graph_id, "style"),
-            Output(self.dash_bt.rsi_graph_id, "figure"),
-            Output(self.dash_bt.rsi_graph_id, "style"),
 
-            Input(self.tabs.id_layout, "active_tab"),
+            Input(self.x_ma.backtest_button, "n_clicks"),
+            State(self.x_ma.backtest_button, "children"),
             Input(self.checklist.id, "value"),
 
             State("search-stock", "value"),
@@ -130,8 +130,9 @@ class RegisterCallbacks():
             State(self.x_ma.ma_types, "value"),
             prevent_initial_call=True,
         )
-        def plot_backtest(
-            tab_id: str,
+        def plot_backtest_crossing_ma(
+            _,
+            button_state,
             checklist: str,
             search_stock: str,
             short_ma: int = 20,
@@ -139,32 +140,97 @@ class RegisterCallbacks():
             ma_type: str = "SMA",
         ):
             x_ma_output = self.not_display
-            rsi_output = self.not_display
+            ctx = dash.callback_context
 
-            if tab_id == self.tabs.backtesting_id:
-                df = self.db.get_stock_data(search_stock)
-                if df_is_none(df):
-                    return *x_ma_output, *rsi_output
+            if button_state == self.x_ma.state_hide_bt:
+                return x_ma_output
 
-                bt = BackTesting()
-                bt.set_data(df)
+            df = self.db.get_stock_data(search_stock)
+            if df_is_none(df):
+                return x_ma_output
+            
+            if self.checklist.x_ma_val in checklist and \
+                ctx.triggered_id == self.x_ma.backtest_button:
 
-                if self.checklist.x_ma_val in checklist:
-                    try:
-                        self.strategy_name = f"Signal_{ma_type}_{short_ma}_{long_ma}"
+                try:
+                    bt = BackTesting()
+                    bt.set_data(df)
+                    self.strategy_name = f"Signal_{ma_type}_{short_ma}_{long_ma}"
+                    if self.strategy_name in df.columns:
                         bt.run(self.strategy_name)
                         x_ma_output = bt.show_report(self.strategy_name), self.display
-                    except Exception as e:
-                        logger.error(f"Error backtesting {self.strategy_name}: {e}")
-                        x_ma_output = self.not_display
+                except Exception as e:
+                    logger.error(f"Error backtesting {self.strategy_name}: {e}")
+                    x_ma_output = self.not_display
 
-                if self.checklist.rsi_val in checklist:
-                    try:
-                        self.strategy_name = "Signal_RSI_P14_U80_L20"
+            return x_ma_output
+        
+        @callback(
+            Output(self.dash_bt.rsi_graph_id, "figure"),
+            Output(self.dash_bt.rsi_graph_id, "style"),
+
+            Input(self.dash_rsi.backtest_button, "n_clicks"),
+            State(self.dash_rsi.backtest_button, "children"),
+            Input(self.checklist.id, "value"),
+
+            State("search-stock", "value"),
+            prevent_initial_call=True,
+        )
+        def plot_backtest_crossing_ma(
+            _,
+            button_state,
+            checklist: str,
+            search_stock: str,
+        ):
+            x_ma_output = self.not_display
+            ctx = dash.callback_context
+
+            if button_state == self.x_ma.state_hide_bt:
+                return x_ma_output
+
+            df = self.db.get_stock_data(search_stock)
+            if df_is_none(df):
+                return x_ma_output
+
+            if self.checklist.rsi_val in checklist and \
+                ctx.triggered_id == self.dash_rsi.backtest_button:
+                try:
+                    bt = BackTesting()
+                    bt.set_data(df)
+                    self.strategy_name = "Signal_RSI_P14_U80_L20"
+                    if self.strategy_name in df.columns:
                         bt.run(self.strategy_name)
-                        rsi_output = bt.show_report(self.strategy_name), self.display
-                    except Exception as e:
-                        logger.error(f"Error backtesting {self.strategy_name}: {e}")
-                        rsi_output = self.not_display
+                        x_ma_output = bt.show_report(self.strategy_name), self.display
+                except Exception as e:
+                    logger.error(f"Error backtesting {self.strategy_name}: {e}")
+                    x_ma_output = self.not_display
 
-            return *x_ma_output, *rsi_output
+            return x_ma_output
+    
+    
+    def register_backtest_buttons_callback(self):
+        @callback (
+            Output(self.x_ma.backtest_button, "children"),
+            Input(self.x_ma.backtest_button, "n_clicks"),
+            State(self.x_ma.backtest_button, "children"),
+            prevent_initial_call=True,
+        )
+        def change_crossing_ma_btn_state(_, state):
+            return change_btn_state(state)
+
+        @callback (
+            Output(self.dash_rsi.backtest_button, "children"),
+            Input(self.dash_rsi.backtest_button, "n_clicks"),
+            State(self.dash_rsi.backtest_button, "children"),
+            prevent_initial_call=True,
+        )
+        def change_rsi_btn_state(_, state):
+            return change_btn_state(state)
+        
+        def change_btn_state(state):
+            show = "Show backtesting"
+            hide = "Hide backtesting"
+            if state == show:
+                return hide
+            else:
+                return show
