@@ -2,7 +2,7 @@ from signal_scanner import SignalScanner
 from utils import log_exectime
 from strategy import StrategyCrossingMA, StrategyRSI, StrategyBollingerBands
 
-stocks = ["MARA", "MSTR", "AAPL", "COIN", "CNSWF", "AMZN", "NVDA", "GOOGL"]
+stocks = ["MARA", "AAPL", "COIN", "CNSWF", "AMZN", "GOOGL", "PLTR", "SPOT"]
 sig_types = ["MA", "RSI", "BB"]
 
 x_ma = StrategyCrossingMA()

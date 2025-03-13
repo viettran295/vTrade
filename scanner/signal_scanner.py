@@ -48,7 +48,7 @@ class SignalScanner:
                 stocks_to_fetch.append(stock)
 
         logger.info(" --- Async scanner is starting  ---")
-        fetched_data = await vtr.get_stocks_async(stocks_to_fetch)
+        fetched_data = await vtr.get_batch_stocks_async(stocks_to_fetch)
 
         for stock, fetched_df in fetched_data.items():
             self.cache[stock] = fetched_df 

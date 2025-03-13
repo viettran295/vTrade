@@ -151,17 +151,19 @@ class vTrade():
     def __process_batch_data(data: dict) -> dict:
         results = {}
         for req_key, req_val in data.items():
-            if req_val["status"] == "success" and "response" in req_val:
-                repsponse = req_val["response"]
-                df = pl.DataFrame(repsponse['values'])
-                df = df.with_columns(
-                    pl.col(df.columns[0]).str.strptime(pl.Datetime).cast(pl.Date),
-                    *[pl.col(i).cast(pl.Float64) for i in df.columns[1:]], # Unpack list
-                )
-                df = df.sort(by=pl.col("datetime"), descending=False)
-                results[req_key] = df
-            else:
+            if req_val["status"] != "success" and "response" not in req_val:
                 continue
+            repsponse = req_val["response"]
+            if "values" not in repsponse:
+                continue
+
+            df = pl.DataFrame(repsponse['values'])
+            df = df.with_columns(
+                pl.col(df.columns[0]).str.strptime(pl.Datetime).cast(pl.Date),
+                *[pl.col(i).cast(pl.Float64) for i in df.columns[1:]], # Unpack list
+            )
+            df = df.sort(by=pl.col("datetime"), descending=False)
+            results[req_key] = df
         return results
     
 if __name__ == "__main__":
