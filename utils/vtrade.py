@@ -9,60 +9,101 @@ import aiohttp
 import websockets
 import json
 from typing import Tuple, List
-import time
-import threading
-import socket
+
 
 class vTrade():
+    url = f"https://api.twelvedata.com"
+
     def __init__(self) -> None:
         self.end_date = date.today() - timedelta(days=1)
         self.start_date = self.end_date - timedelta(days=365*3)
         self.api_key = os.getenv("12_DATA_KEY")
         self.coincap_key = os.getenv("COINCAP_KEY")
     
-    async def get_stocks_async(self, stocks: List[str]) -> dict:
-        results = {} 
+    async def get_stocks_async(self, stock) -> dict:
         async with aiohttp.ClientSession() as session:
-            tasks = [self.__fetch_stock_data(session, stock) \
-                    if stock is not None else stock \
-                    for stock in stocks]
-            logger.debug(f"Fetching {stocks} data")
-            for symbol, df in await asyncio.gather(*tasks):
-                results[symbol] = df
-        return results
-
-    async def __fetch_stock_data(self, session, symbol, interval="1day", start_date=None, end_date=None) -> Tuple[str, pl.DataFrame]:
-        if end_date is None:
-            end_date = self.end_date
-        if start_date is None:
-            start_date = self.start_date
-        url = f"https://api.twelvedata.com/time_series?symbol={symbol}&interval={interval}&start_date={start_date}&end_date={end_date}&apikey={self.api_key}"
+            return await self.fetch_data(session, stock) 
+    
+    async def get_batch_stocks_async(self, stocks: List[str]) -> dict:
+        async with aiohttp.ClientSession() as session:
+            return await self.fetch_data(session, stocks, fetch_batch=True)
+    
+    async def fetch_data(
+            self, 
+            session: aiohttp.ClientSession, 
+            symbols: List[str], 
+            interval="1day", 
+            start_date=None, 
+            end_date=None,
+            fetch_batch: bool=False
+    ):
+        start_date = start_date or self.start_date
+        end_date = end_date or self.end_date
         
+        if fetch_batch:
+            return await self.__fetch_batch_data(session, symbols, interval, start_date, end_date)
+        else:
+            return await self.__fetch_stock_data(session, symbols[0], interval, start_date, end_date)
+
+    async def __fetch_batch_data(
+            self, 
+            session: aiohttp.ClientSession, 
+            symbols: List[str], 
+            interval="1day", 
+            start_date=None, 
+            end_date=None
+    ) -> dict:
+        
+        self.url += "/batch"
+        batch_req = {}
+        for symbol in symbols:
+            batch_req[symbol] = {
+                "url": 
+                    f"/time_series?symbol={symbol}&interval={interval}&start_date={start_date}&end_date={end_date}&apikey={self.api_key}"
+            }
         try:
-            async with session.get(url, timeout=5) as resp:
+            async with session.post(self.url, data=json.dumps(batch_req), timeout=5) as resp:
+                data = await resp.json()
+                logger.debug(f"Received response when batch fetch {symbols} data")
+        except TimeoutError as e :
+            logger.error(f"Timeout when batch request {symbols} -> {e}")
+            return symbols, None
+        except ConnectionError as e:
+            logger.error(f"Connection error when batch request {symbols} -> {e}")
+            return symbols, None
+        except Exception as e:
+            logger.error(f"Error when batch request {symbols} -> {e}")
+        
+        return self.__process_batch_data(data["data"])
+
+    async def __fetch_stock_data(
+            self, 
+            session: aiohttp.ClientSession, 
+            symbol: str,
+            interval: str="1day", 
+            start_date=None, 
+            end_date=None
+    ) -> dict:
+        
+        self.url += f"/time_series?symbol={symbol}&interval={interval}&start_date={start_date}&end_date={end_date}&apikey={self.api_key}"
+        try:
+            async with session.get(self.url, timeout=5) as resp:
                 resp.raise_for_status()
                 data = await resp.json()
+                result = {
+                    symbol: self.__process_single_data(data)
+                }
                 logger.debug(f"Received response when fetch {symbol} data")
         except TimeoutError as e :
             logger.error(f"Timeout when request {symbol} -> {e}")
-            return symbol, None
+            return None
         except ConnectionError as e:
             logger.error(f"Connection error when reques {symbol} -> {e}")
-            return symbol, None
+            return None
         except Exception as e:
             logger.error(f"Error when request {symbol} -> {e}")
-        
-        # Add data to DataFrame
-        if "values" in data:
-            df = pl.DataFrame(data['values'])
-            df = df.with_columns(
-                pl.col(df.columns[0]).str.strptime(pl.Datetime).cast(pl.Date),
-                *[pl.col(i).cast(pl.Float64) for i in df.columns[1:]], # Unpack list
-            )
-            df = df.sort(by=pl.col("datetime"), descending=False)
-            return symbol, df
-        else:
-            return symbol, None
+            return None
+        return result
     
     async def connect_websocket(self, asset: str="bitcoin"):
         uri = f"wss://ws.coincap.io/prices?assets={asset}"
@@ -93,7 +134,36 @@ class vTrade():
         except OSError as e:
             logger.error(f"Error closing socket: {e}")
 
-
+    @staticmethod
+    def __process_single_data(data: dict) -> pl.DataFrame:
+        if "values" in data:
+            df = pl.DataFrame(data['values'])
+            df = df.with_columns(
+                pl.col(df.columns[0]).str.strptime(pl.Datetime).cast(pl.Date),
+                *[pl.col(i).cast(pl.Float64) for i in df.columns[1:]], # Unpack list
+            )
+            df = df.sort(by=pl.col("datetime"), descending=False)
+            return df
+        else:
+            return None
+        
+    @staticmethod
+    def __process_batch_data(data: dict) -> dict:
+        results = {}
+        for req_key, req_val in data.items():
+            if req_val["status"] == "success" and "response" in req_val:
+                repsponse = req_val["response"]
+                df = pl.DataFrame(repsponse['values'])
+                df = df.with_columns(
+                    pl.col(df.columns[0]).str.strptime(pl.Datetime).cast(pl.Date),
+                    *[pl.col(i).cast(pl.Float64) for i in df.columns[1:]], # Unpack list
+                )
+                df = df.sort(by=pl.col("datetime"), descending=False)
+                results[req_key] = df
+            else:
+                continue
+        return results
+    
 if __name__ == "__main__":
     vtr = vTrade()
     asyncio.run(vtr.connect_websocket())
