@@ -8,10 +8,10 @@ import asyncio
 import aiohttp
 import websockets
 import json
-from typing import Tuple, List
+from typing import List
 
 
-class vTrade():
+class DataFetch():
     url = f"https://api.twelvedata.com"
 
     def __init__(self) -> None:

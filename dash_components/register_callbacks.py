@@ -1,4 +1,4 @@
-from dash import callback, Input, Output, State, exceptions
+from dash import callback, Input, Output, State
 from utils import *
 from strategy import StrategyCrossingMA, StrategyRSI
 import dash
@@ -24,7 +24,6 @@ class RegisterCallbacks():
         self.not_display = {}, {"display": "none"}
         self.display = {"display": "block"}
 
-        self.vtrade = vTrade()
         self.strategy_x_ma = StrategyCrossingMA()
         self.strategy_rsi = StrategyRSI()
         self.strategy_name = ""

@@ -5,7 +5,7 @@ from typing import List
 import time
 import asyncio
 from typing import List
-from utils.vtrade import vTrade
+from utils import DataFetch
 
 class SignalScanner:
     def __init__(self, strategy: List[Strategy], stocks_list: List[str], day_to_scan: int = 7) -> None:
@@ -41,14 +41,14 @@ class SignalScanner:
     
     async def scan_async(self):
         curr_time = time.time()
-        vtr = vTrade()
+        fetcher = DataFetch()
         stocks_to_fetch = []
         for stock in self.stocks_list:
             if curr_time - self.last_query_time.get(stock, 0) > self.query_interval:
                 stocks_to_fetch.append(stock)
 
         logger.info(" --- Async scanner is starting  ---")
-        fetched_data = await vtr.get_batch_stocks_async(stocks_to_fetch)
+        fetched_data = await fetcher.get_batch_stocks_async(stocks_to_fetch)
 
         for stock, fetched_df in fetched_data.items():
             self.cache[stock] = fetched_df 

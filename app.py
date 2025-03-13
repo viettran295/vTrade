@@ -2,7 +2,7 @@ from dash import Dash, html, callback, Input, Output, State, dcc
 import dash
 import dash_bootstrap_components as dbc
 import utils
-from utils import vTrade
+from utils import DataFetch
 from dash_components import RegisterCallbacks, ConnectDB
 from dotenv import load_dotenv
 load_dotenv()
@@ -138,8 +138,8 @@ async def fetch_stock(search_stock):
     if cached_df is not None:
         return cached_df.to_dict(as_series=False)
 
-    vtr = vTrade()
-    resp = await vtr.get_stocks_async([search_stock])
+    fetcher = DataFetch()
+    resp = await fetcher.get_stocks_async([search_stock])
     df = resp[search_stock]
     if df is not None and not df.is_empty():
         db_conn.create_table(df, search_stock)
