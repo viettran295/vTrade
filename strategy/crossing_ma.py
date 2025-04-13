@@ -27,13 +27,13 @@ class StrategyCrossingMA(Strategy):
             if "SMA" == ma_type:
                 # Simple moving average
                 df = df.with_columns(
-                    pl.col("high").rolling_mean(window_size=length).alias(self.short_ma_type),
+                    pl.col("close").rolling_mean(window_size=length).alias(self.short_ma_type),
                 )
                 logger.info(f"SMA {length} is calculated")
             elif "EWM" == ma_type: 
                 # Exponentially weighted moving average
                 df = df.with_columns(
-                        pl.col("high").ewm_mean(span=length).alias(self.short_ma_type),
+                        pl.col("close").ewm_mean(span=length).alias(self.short_ma_type),
                     )
                 logger.info(f"EWM {length} is calculated")
             else:

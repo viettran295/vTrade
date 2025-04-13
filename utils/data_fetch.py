@@ -12,7 +12,7 @@ from typing import List
 
 
 class DataFetch():
-    url = f"https://api.twelvedata.com"
+    url = "http://localhost:8000"
 
     def __init__(self) -> None:
         self.end_date = date.today() - timedelta(days=1)
@@ -85,9 +85,9 @@ class DataFetch():
             end_date=None
     ) -> dict:
         
-        self.url += f"/time_series?symbol={symbol}&interval={interval}&start_date={start_date}&end_date={end_date}&apikey={self.api_key}"
+        url = self.url + f"/{symbol}"
         try:
-            async with session.get(self.url, timeout=5) as resp:
+            async with session.get(url, timeout=5) as resp:
                 resp.raise_for_status()
                 data = await resp.json()
                 result = {
@@ -165,7 +165,3 @@ class DataFetch():
             df = df.sort(by=pl.col("datetime"), descending=False)
             results[req_key] = df
         return results
-    
-if __name__ == "__main__":
-    vtr = vTrade()
-    asyncio.run(vtr.connect_websocket())
