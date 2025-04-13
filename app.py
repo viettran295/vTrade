@@ -18,6 +18,7 @@ app = Dash(
 app._favicon = "bull_icon.ico"
 
 rc = RegisterCallbacks()
+fetcher = DataFetch()
 db_conn = ConnectDB()
 db_conn.clean_up_db()
 
@@ -138,7 +139,6 @@ async def fetch_stock(search_stock):
     if cached_df is not None:
         return cached_df.to_dict(as_series=False)
 
-    fetcher = DataFetch()
     resp = await fetcher.get_stocks_async([search_stock])
     df = resp[search_stock]
     if df is not None and not df.is_empty():
