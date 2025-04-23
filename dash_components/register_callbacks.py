@@ -2,6 +2,7 @@ from dash import callback, Input, Output, State
 from utils import *
 from strategy import StrategyCrossingMA, StrategyRSI
 import dash
+import asyncio
 
 from .dash_crossing_ma import DashCrossingMA
 from .dash_rsi import DashRSI
@@ -33,7 +34,7 @@ class RegisterCallbacks():
             Output(self.x_ma.crossing_ma_graph, "figure"),
             Output(self.x_ma.id_layout, "style"),
             Input(self.x_ma.apply_crossing_ma_button, "n_clicks"),
-            Input("stock-data-store", "data"),
+            Input("activate-search", "data"),
             Input(self.checklist.id, "value"),
             State("search-stock", "value"),
             State(self.x_ma.short_ma_input, "value"),
@@ -42,41 +43,17 @@ class RegisterCallbacks():
         )
         def plot_crossing_ma(
             _,
-            stock_data_store, 
+            __, 
             checklist,
             search_stock,
             short_ma: int = 20,
             long_ma: int = 50,
             ma_type: str = "SMA",
         ):
-            if stock_data_store is None or len(stock_data_store) == 0:
-                return self.not_display
-            
-            df = self.db.get_stock_data(search_stock)
-            if df is None:
-                return self.not_display
-                
-            # Early return without calculating crossing MA
-            self.strategy_name = f"Signal_{ma_type}_{short_ma}_{long_ma}"
-            if not checklist or self.checklist.x_ma_val not in checklist:
-                return self.strategy_x_ma.show_stock_price(df), self.display
-            elif self.strategy_name in df:
-                return self.strategy_x_ma.show(df, short_ma, long_ma, ma_type), self.display
-            
             try:
-                df = self.strategy_x_ma.execute(df, short_ma, long_ma, ma_type)
-                self.db.update_columns(
-                    df,
-                    search_stock, 
-                    {
-                        self.strategy_x_ma.short_ma_type: "FLOAT", 
-                        self.strategy_x_ma.long_ma_type: "FLOAT", 
-                        self.strategy_x_ma.signal: "FLOAT"
-                    },
-                    df.columns[0]
-                )
+                df = asyncio.run(self.strategy_x_ma.fetch_cross_ma_signal(search_stock, short_ma, long_ma))
                 if df is not None:
-                    return self.strategy_x_ma.show(df, short_ma, long_ma, ma_type), self.display
+                    return self.strategy_x_ma.show(df), self.display
             except Exception as e:
                 logger.error(f"Error plotting crossing MA: {e}")
                 return self.not_display
