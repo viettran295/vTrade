@@ -1,4 +1,4 @@
-from dash import Dash, html, callback, Input, Output, State, dcc
+from dash import Dash, html, callback, Input, Output, State, dcc, ctx
 import dash
 import dash_bootstrap_components as dbc
 import utils
@@ -6,8 +6,6 @@ from utils import DataFetch
 from dash_components import RegisterCallbacks, ConnectDB
 from dotenv import load_dotenv
 load_dotenv()
-from loguru import logger
-import asyncio
 
 dbc_css = "https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/minty/bootstrap.min.css"
 
@@ -129,36 +127,20 @@ app.layout = dbc.Container(
                 "display": "flex"
             }
         ),
-        dcc.Store(id="stock-data-store")
+        dcc.Store(id="activate-search")
     ],
     fluid=True
 )
 
-async def fetch_stock(search_stock):
-    cached_df = db_conn.is_cached(search_stock)
-    if cached_df is not None:
-        return cached_df.to_dict(as_series=False)
-
-    resp = await fetcher.get_stocks_async([search_stock])
-    df = resp[search_stock]
-    if df is not None and not df.is_empty():
-        db_conn.create_table(df, search_stock)
-        return df.write_json()
-    else:
-        logger.debug(f"No data for {search_stock} is fetched")
-        return {}
-
 @callback (
-    Output("stock-data-store", "data"),
+    Output("activate-search", "data"),
     Input("search-button", "n_clicks"),
     State("search-stock", "value"),
 )
 def update_stock_data(_, search_stock):
-    try:
-        result = asyncio.run(fetch_stock(search_stock))
-        return result
-    except Exception as _:
-        return dash.no_update
+    if "search-button" == ctx.triggered_id:
+        return search_stock
+    return dash.no_update
 
 rc.register_MA_plot_callbacks()
 rc.register_backtest_plot_callback()

@@ -5,19 +5,16 @@ from abc import ABC, abstractmethod
 
 class Strategy(ABC):
     def __init__(self) -> None:
+        self.url = "http://localhost:8000"
         self.columns = ["datetime", "open", "close", "high", "low"]
         self.signal = ""
         self.bin_signal = {
             "buy": 1,
             "sell": 0
         }
-
-    @abstractmethod
-    def execute(self):
-        pass
     
     @abstractmethod
-    def show(self):
+    def show(self, df: pl.DataFrame) -> go.Figure | None:
         return
     
     def show_stock_price(self, df: pl.DataFrame) -> go.Figure:
