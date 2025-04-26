@@ -13,8 +13,15 @@ class StrategyCrossingMA(Strategy):
         self.short_ma = short_MA
         self.long_ma = long_MA
 
-    async def fetch_cross_ma_signal(self, stock: str, short_ma: int=20, long_ma: int=50):
-        url = self.url + "/ma/" + stock + f"?short_ma={short_ma}&long_ma={long_ma}"
+    async def fetch_cross_ma_signal(
+            self, 
+            stock: str, 
+            short_ma: int=20, 
+            long_ma: int=50,
+            ma_type: str="sma",
+        ):
+        ma_type = '/' + ma_type.lower() + '/'
+        url = self.url + ma_type + stock + f"?short_ma={short_ma}&long_ma={long_ma}"
         async with aiohttp.ClientSession() as session:
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as response:
                 if response.status == 200:
@@ -48,8 +55,8 @@ class StrategyCrossingMA(Strategy):
                                 y=df[f"{self.short_ma_type}"].to_list(),
                                 name=f"{self.short_ma_type}",
                                 line=dict(
-                                    color="#ce6ff7",
-                                    width=2.5
+                                    color="#FFFF00",
+                                    width=2
                                 )
                             )
             )
@@ -61,7 +68,7 @@ class StrategyCrossingMA(Strategy):
                                 fill='tonexty',
                                 line=dict(
                                     color="white",
-                                    width=2.5
+                                    width=2
                                 )
                             )
             )

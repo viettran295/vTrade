@@ -50,13 +50,21 @@ class RegisterCallbacks():
             long_ma: int = 50,
             ma_type: str = "SMA",
         ):
-            try:
-                df = asyncio.run(self.strategy_x_ma.fetch_cross_ma_signal(search_stock, short_ma, long_ma))
-                if df is not None:
-                    return self.strategy_x_ma.show(df), self.display
-            except Exception as e:
-                logger.error(f"Error plotting crossing MA: {e}")
-                return self.not_display
+            if search_stock is not None or search_stock == "":
+                try:
+                    df = asyncio.run(self.strategy_x_ma.fetch_cross_ma_signal(
+                                                                search_stock, 
+                                                                short_ma, 
+                                                                long_ma,
+                                                                ma_type
+                                                        )
+                                    )
+                    if df is not None:
+                        return self.strategy_x_ma.show(df), self.display
+                except Exception as e:
+                    logger.error(f"Error plotting crossing MA: {e}")
+                    return self.not_display
+            return self.not_display
     
     def register_RSI_plot_callback(self):
         @callback (

@@ -76,7 +76,7 @@ class DashCrossingMA():
                                     },
                                 ),
                                 dcc.RadioItems(
-                                    ["SMA", "EWM"], value="SMA",
+                                    ["SMA", "EWMA"], value="SMA",
                                     id=self.ma_types,
                                     style={
                                         "textAlign": "center",
