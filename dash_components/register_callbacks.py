@@ -75,24 +75,10 @@ class RegisterCallbacks():
         )
         def plot_rsi(checklist, search_stock):
             if self.checklist.rsi_val in checklist:
-                df = self.db.get_stock_data(search_stock)
-
-                self.strategy_name = "Signal_RSI_P14_U80_L20"
-                if df is not None and self.strategy_name in df.columns:
-                    return self.strategy_rsi.show(df), self.display
-
                 try:
-                    df_rsi = self.strategy_rsi.execute(df)
-                    self.db.update_columns(
-                        df_rsi,
-                        search_stock, 
-                        {
-                            self.strategy_rsi.RSI: "FLOAT",
-                            self.strategy_rsi.signal: "FLOAT"
-                        },
-                        df_rsi.columns[0]
-                    )
-                    return self.strategy_rsi.show(df_rsi), self.display
+                    df_rsi = asyncio.run(self.strategy_rsi.fetch_rsi_signal(search_stock))
+                    if df_rsi is not None:
+                        return self.strategy_rsi.show(df_rsi), self.display
                 except Exception as e:
                     logger.error(f"Error plotting RSI: {e}")
                     return self.not_display
