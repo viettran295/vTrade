@@ -31,8 +31,7 @@ class StrategyRSI(Strategy):
                 if response.status == 200:
                     data = await response.json()
                     result = self.__process_response(data)
-                    logger.debug(f"Received crossing MA response for {stock}")
-                    print(result)
+                    logger.debug(f"Received RSI response for {stock}")
                     return result
                 else:
                     logger.error(f"Failed to fetch cross MA signal for {stock}")
@@ -56,6 +55,14 @@ class StrategyRSI(Strategy):
                         )
         fig.add_hline(y=upper_bound, line_dash="dash", line_color="red")
         fig.add_hline(y=lower_bound, line_dash="dash", line_color="red")
+        # Add the filled region
+        fig.add_shape(type="rect",
+                      x0=min(df["datetime"].to_list()),
+                      x1=max(df["datetime"].to_list()),
+                      y0=lower_bound,
+                      y1=upper_bound,
+                      fillcolor="rgba(255, 0, 0, 0.1)",  # Red with 20% opacity
+                      line_width=0)
 
         overbougt = df.filter(pl.col(self.RSI) > upper_bound)
         oversold = df.filter(pl.col(self.RSI) < lower_bound)
