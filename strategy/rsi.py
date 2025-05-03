@@ -7,13 +7,7 @@ import aiohttp
 from strategy import Strategy
 
 class StrategyRSI(Strategy):
-    delta = "delta"
-    gain = "gain"
-    loss = "loss"
-    avg_gain = "avg_gain"
-    avg_loss = "avg_loss"
-    RS = "rs"
-    RSI = "rsi"
+    RSI = ""
 
     def __init__(self, period: int=14, upper_bound: int=80, lower_bound: int=20):
         super().__init__()
@@ -40,7 +34,11 @@ class StrategyRSI(Strategy):
     def show(self, df: pl.DataFrame, upper_bound=80, lower_bound=20) -> go.Figure | None:
         if not utils.check_list_substr_in_str(["rsi", "datetime"], df.columns):
             logger.debug("Dataframe columns do not contain RSI")
-            
+            return 
+        
+        if not self.__columns_exist(df):
+            logger.error("Columns in DataFrame for MA calculation are missing")
+            return
         fig = go.Figure()
         fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
 
@@ -80,6 +78,17 @@ class StrategyRSI(Strategy):
                 )
         return fig
 
+    def __columns_exist(self, df: pl.DataFrame) -> bool:
+        for col in df.columns:
+            match col:
+                case col_name if "RSI" in col_name:
+                    self.RSI = col_name
+                case col_name if "Sig" in col_name:
+                    self.signal = col_name
+        if self.RSI == "" or self.signal == "":
+            return False
+        return True
+    
     @staticmethod
     def __process_response(data: dict) -> pl.DataFrame | None:
         if "data" in data and "columns" in data:
