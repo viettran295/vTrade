@@ -13,6 +13,7 @@ app = Dash(
     title="Trust the Algorithms",
     external_stylesheets=[dbc.themes.DARKLY, dbc_css, dbc.icons.FONT_AWESOME]
 )
+server = app.server
 app._favicon = "bull_icon.ico"
 
 rc = RegisterCallbacks()
