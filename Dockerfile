@@ -10,4 +10,4 @@ RUN uv python install 3.11 && uv sync --locked
 
 EXPOSE 8050
 
-CMD ["/app/.venv/bin/gunicorn", "--worker=2", "--bind", "0.0.0.0:8050", "app:server"]
+CMD ["/app/.venv/bin/gunicorn", "--workers=2" ,"--threads=4", "--bind", "0.0.0.0:8050", "app:server"]
