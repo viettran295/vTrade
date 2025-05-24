@@ -10,7 +10,6 @@ from .dash_backtesting import DashBackTesting
 from .dash_checklist import DashChecklist
 from .dash_tabs import DashTabs
 
-from .db import ConnectDB
 from backtesting import BackTesting
 
 class RegisterCallbacks():
@@ -21,7 +20,6 @@ class RegisterCallbacks():
         self.checklist = DashChecklist()
         self.tabs = DashTabs()
 
-        self.db = ConnectDB()
         self.not_display = {}, {"display": "none"}
         self.display = {"display": "block"}
 
@@ -85,99 +83,6 @@ class RegisterCallbacks():
             else:
                 return self.not_display
             
-    def register_backtest_plot_callback(self):
-        @callback(
-            Output(self.dash_bt.x_ma_graph_id, "figure"),
-            Output(self.dash_bt.x_ma_graph_id, "style"),
-
-            Input(self.x_ma.backtest_button, "n_clicks"),
-            State(self.x_ma.backtest_button, "children"),
-            Input(self.checklist.id, "value"),
-
-            State("search-stock", "value"),
-            State(self.x_ma.short_ma_input, "value"),
-            State(self.x_ma.long_ma_input, "value"),
-            State(self.x_ma.ma_types, "value"),
-            prevent_initial_call=True,
-        )
-        def plot_backtest_crossing_ma(
-            _,
-            button_state,
-            checklist: str,
-            search_stock: str,
-            short_ma: int = 20,
-            long_ma: int = 50,
-            ma_type: str = "SMA",
-        ):
-            x_ma_output = self.not_display
-            ctx = dash.callback_context
-
-            if button_state == self.x_ma.state_hide_bt:
-                return x_ma_output
-
-            df = self.db.get_stock_data(search_stock)
-            if df_is_none(df):
-                return x_ma_output
-            
-            if self.checklist.x_ma_val in checklist and \
-                ctx.triggered_id == self.x_ma.backtest_button:
-
-                try:
-                    bt = BackTesting()
-                    bt.set_data(df)
-                    self.strategy_name = f"Signal_{ma_type}_{short_ma}_{long_ma}"
-                    if self.strategy_name in df.columns:
-                        bt.run(self.strategy_name)
-                        x_ma_output = bt.show_report(self.strategy_name), self.display
-                except Exception as e:
-                    logger.error(f"Error backtesting {self.strategy_name}: {e}")
-                    x_ma_output = self.not_display
-
-            return x_ma_output
-        
-        @callback(
-            Output(self.dash_bt.rsi_graph_id, "figure"),
-            Output(self.dash_bt.rsi_graph_id, "style"),
-
-            Input(self.dash_rsi.backtest_button, "n_clicks"),
-            State(self.dash_rsi.backtest_button, "children"),
-            Input(self.checklist.id, "value"),
-
-            State("search-stock", "value"),
-            prevent_initial_call=True,
-        )
-        def plot_backtest_crossing_ma(
-            _,
-            button_state,
-            checklist: str,
-            search_stock: str,
-        ):
-            x_ma_output = self.not_display
-            ctx = dash.callback_context
-
-            if button_state == self.x_ma.state_hide_bt:
-                return x_ma_output
-
-            df = self.db.get_stock_data(search_stock)
-            if df_is_none(df):
-                return x_ma_output
-
-            if self.checklist.rsi_val in checklist and \
-                ctx.triggered_id == self.dash_rsi.backtest_button:
-                try:
-                    bt = BackTesting()
-                    bt.set_data(df)
-                    self.strategy_name = "Signal_RSI_P14_U80_L20"
-                    if self.strategy_name in df.columns:
-                        bt.run(self.strategy_name)
-                        x_ma_output = bt.show_report(self.strategy_name), self.display
-                except Exception as e:
-                    logger.error(f"Error backtesting {self.strategy_name}: {e}")
-                    x_ma_output = self.not_display
-
-            return x_ma_output
-    
-    
     def register_backtest_buttons_callback(self):
         @callback (
             Output(self.x_ma.backtest_button, "children"),

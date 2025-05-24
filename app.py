@@ -3,7 +3,7 @@ import dash
 import dash_bootstrap_components as dbc
 import utils
 from utils import DataFetch
-from dash_components import RegisterCallbacks, ConnectDB
+from dash_components import RegisterCallbacks
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -18,8 +18,6 @@ app._favicon = "bull_icon.ico"
 
 rc = RegisterCallbacks()
 fetcher = DataFetch()
-db_conn = ConnectDB()
-db_conn.clean_up_db()
 
 app.layout = dbc.Container(
     style = {
@@ -144,7 +142,6 @@ def update_stock_data(_, search_stock):
     return dash.no_update
 
 rc.register_MA_plot_callbacks()
-rc.register_backtest_plot_callback()
 rc.register_RSI_plot_callback()
 rc.register_backtest_buttons_callback()
 
