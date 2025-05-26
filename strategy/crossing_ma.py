@@ -42,8 +42,8 @@ class StrategyCrossingMA(Strategy):
             logger.error("Columns in DataFrame for MA calculation are missing")
             return
 
-        signal_buy = df.filter(df[self.signal] == 1)
-        signal_sell = df.filter(df[self.signal] == -1)
+        signal_buy = df.filter(df[self.signal] == -1)
+        signal_sell = df.filter(df[self.signal] == 1)
 
         fig = go.Figure()
         fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
