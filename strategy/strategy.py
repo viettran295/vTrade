@@ -6,8 +6,8 @@ from abc import ABC, abstractmethod
 class Strategy(ABC):
     def __init__(self) -> None:
         self.url = "http://localhost:8000"
-        self.columns = ["datetime", "open", "close", "high", "low"]
-        self.signal = ""
+        self.columns = ["datetime", "high", "low", "open", "close"]
+        self.signal = "signal"
         self.bin_signal = {
             "buy": 1,
             "sell": 0

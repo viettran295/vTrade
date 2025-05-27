@@ -107,28 +107,43 @@ class StrategyCrossingMA(Strategy):
         return fig
 
     def __columns_exist(self, df: pl.DataFrame) -> bool:
+        ma_cols = []
         for col in df.columns:
-            match col:
-                case col_name if "short" in col_name:
-                    self.short_ma_type = col_name
-                case col_name if "long" in col_name:
-                    self.long_ma_type = col_name
-                case col_name if "Sig" in col_name:
-                    self.signal = col_name
+            if "Sig" in col:
+                self.signal = col
+            elif "SMA" in col or "EWMA" in col:
+                ma_cols.append(col)
+        ma_cols = sorted(ma_cols)
+        self.short_ma_type = ma_cols[0]
+        self.long_ma_type = ma_cols[1]
         if self.short_ma_type == "" or \
             self.long_ma_type == "" or \
             self.signal == "":
             return False
         return True
 
-    @staticmethod
-    def __process_response(data: dict) -> pl.DataFrame | None:
+    def __process_response(self, data: dict) -> pl.DataFrame | None:
         if "data" in data and "columns" in data:
             df = pl.DataFrame(data['data'])
+            ma_window_1 = "ma_window_1"
+            ma_window_2 = "ma_window_2"
+            ma_windows = "ma_windows"
+
+            df = df.with_columns([
+                pl.col(ma_windows).map_elements(lambda x: x[0] if len(x) > 0 else None).alias(ma_window_1),
+                pl.col(ma_windows).map_elements(lambda x: x[1] if len(x) > 1 else None).alias(ma_window_2),
+            ])
+
+            df = df.drop(ma_windows)
+
             df = df.with_columns(
                 pl.col(df.columns[0]).str.strptime(pl.Datetime).cast(pl.Date),
                 *[pl.col(i).cast(pl.Float64) for i in df.columns[1:]], # Unpack list
             )
+
+            new_pos_cols = self.columns + [ma_window_1, ma_window_2, "signal"]
+            df = df.select(new_pos_cols)
+
             new_names = data["columns"]["column_names"]
             rename_dict = dict(zip(df.columns, new_names))
             df = df.rename(rename_dict)
@@ -136,3 +151,4 @@ class StrategyCrossingMA(Strategy):
             return df
         else:
             return None
+        
