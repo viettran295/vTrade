@@ -21,17 +21,23 @@ class StrategyCrossingMA(Strategy):
             ma_type: str="sma",
         ):
         ma_type = '/' + ma_type.lower() + '/'
-        url = self.url + ma_type + stock + f"?short_ma={short_ma}&long_ma={long_ma}"
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    result = self.__process_response(data)
-                    logger.debug(f"Received crossing MA response for {stock}")
-                    return result
-                else:
-                    logger.error(f"Failed to fetch cross MA signal for {stock}")
-                    return None
+        endpoint = self.url + ma_type + stock + f"?short_ma={short_ma}&long_ma={long_ma}"
+        response = await self._fetch_data(endpoint)
+        if response is not None:
+            data = self.__process_response(response)
+            return data
+
+    async def fetch_best_performance(
+            self, 
+            stock: str, 
+            ma_type: str="sma",
+        ):
+        prefix = '/bestperf/' + ma_type.lower() + '/'
+        url = self.url + prefix + stock
+        response = await self._fetch_data(url)
+        if response is not None:
+            data = self.__process_response(response)
+            return data
 
     def show(self, df: pl.DataFrame) -> go.Figure | None:
         if utils.df_is_none(df):
@@ -105,6 +111,17 @@ class StrategyCrossingMA(Strategy):
                     font=dict(size=18)
                 )
         return fig
+    
+    async def _fetch_data(self, endpoint: str):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(endpoint, timeout=aiohttp.ClientTimeout(total=5)) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    logger.debug(f"Received response from {endpoint}")
+                    return data
+                else:
+                    logger.error(f"Failed to fetch data from {endpoint}")
+                    return None
 
     def __columns_exist(self, df: pl.DataFrame) -> bool:
         ma_cols = []
