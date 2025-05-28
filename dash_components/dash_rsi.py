@@ -4,9 +4,7 @@ import dash_bootstrap_components as dbc
 class DashRSI:
     def __init__(self):
         self.rsi_graph_id = "rsi-graph"
-        self.backtest_button = "rsi-backtest-button"
-        self.state_show_bt = "Show backtesting"
-        self.state_hide_bt = "Hide backtesting"
+        self.bestperf_button = "rsi-backtest-button"
         self.id_layout = "rsi-layout"
     
     def layout(self):
@@ -15,8 +13,8 @@ class DashRSI:
                     children=[
                         html.Div(
                             dbc.Button(
-                                id=self.backtest_button,
-                                children=self.state_show_bt,
+                                id=self.bestperf_button,
+                                children="Best performance",
                                 target="blank",
                                 n_clicks=0,
                                 color="info",

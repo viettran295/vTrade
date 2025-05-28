@@ -8,9 +8,7 @@ class DashCrossingMA():
         self.long_ma_input = "long-ma-input"
         self.ma_types = "ma-types"
         self.apply_crossing_ma_button = "apply-crossing-ma-button"
-        self.backtest_button = "x-ma-backtest-button"
-        self.state_show_bt = "Show backtesting"
-        self.state_hide_bt = "Hide backtesting"
+        self.bestperf_button = "x-ma-bestperf-button"
         self.crossing_ma_graph = "crossing-ma-graph"
         self.id_layout = "crossing-ma-layout"
 
@@ -19,8 +17,8 @@ class DashCrossingMA():
                     id=self.id_layout,
                     children=[
                         dbc.Button(
-                            id=self.backtest_button,
-                            children=self.state_show_bt,
+                            id=self.bestperf_button,
+                            children="Best performance",
                             target="blank",
                             n_clicks=0,
                             color="info",

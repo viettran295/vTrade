@@ -6,15 +6,12 @@ import asyncio
 
 from .dash_crossing_ma import DashCrossingMA
 from .dash_rsi import DashRSI
-from .dash_backtesting import DashBackTesting
 from .dash_checklist import DashChecklist
 from .dash_tabs import DashTabs
 
-from backtesting import BackTesting
 
 class RegisterCallbacks():
     def __init__(self):
-        self.dash_bt = DashBackTesting()
         self.x_ma = DashCrossingMA()
         self.dash_rsi = DashRSI()
         self.checklist = DashChecklist()
@@ -82,30 +79,3 @@ class RegisterCallbacks():
                     return self.not_display
             else:
                 return self.not_display
-            
-    def register_backtest_buttons_callback(self):
-        @callback (
-            Output(self.x_ma.backtest_button, "children"),
-            Input(self.x_ma.backtest_button, "n_clicks"),
-            State(self.x_ma.backtest_button, "children"),
-            prevent_initial_call=True,
-        )
-        def change_crossing_ma_btn_state(_, state):
-            return change_btn_state(state)
-
-        @callback (
-            Output(self.dash_rsi.backtest_button, "children"),
-            Input(self.dash_rsi.backtest_button, "n_clicks"),
-            State(self.dash_rsi.backtest_button, "children"),
-            prevent_initial_call=True,
-        )
-        def change_rsi_btn_state(_, state):
-            return change_btn_state(state)
-        
-        def change_btn_state(state):
-            show = "Show backtesting"
-            hide = "Hide backtesting"
-            if state == show:
-                return hide
-            else:
-                return show
