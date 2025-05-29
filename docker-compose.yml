@@ -1,0 +1,15 @@
+version: '3.9'
+services:
+  dashboard:
+    image: viettrann/vtrade
+    ports:
+      - 8050:8050
+    depends_on:
+      - processor
+    network_mode: host
+
+  processor:
+    image: viettrann/str-proc
+    ports:
+      - 8000:8000
+    network_mode: host
