@@ -74,7 +74,7 @@ class RegisterCallbacks():
             State(self.x_ma.ma_types, "value"),
             prevent_initial_call=True
         )
-        def plot_best_performance(
+        def plot_best_performance_ma(
             _,
             search_stock,
             ma_type: str = "SMA",
@@ -87,7 +87,30 @@ class RegisterCallbacks():
                     if df is not None:
                         return self.strategy_x_ma.show(df), self.display
                 except Exception as e:
-                    logger.error(f"Error plotting crossing MA: {e}")
+                    logger.error(f"Error plotting best performance crossing MA: {e}")
+                    return self.not_display
+            return self.not_display
+        
+        @callback(
+            Output(self.dash_rsi.rsi_graph_id, "figure", allow_duplicate=True),
+            Output(self.dash_rsi.id_layout, "style", allow_duplicate=True),
+            Input(self.dash_rsi.bestperf_button, "n_clicks"),
+            State("search-stock", "value"),
+            prevent_initial_call=True
+        )
+        def plot_best_performance_rsi(
+            _,
+            search_stock,
+        ):
+            if search_stock:
+                try:
+                    df = asyncio.run(
+                            self.strategy_rsi.fetch_best_performance(search_stock)
+                        )
+                    if df is not None:
+                        return self.strategy_rsi.show(df), self.display
+                except Exception as e:
+                    logger.error(f"Error plotting best performance RSI: {e}")
                     return self.not_display
             return self.not_display
 

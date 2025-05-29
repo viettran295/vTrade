@@ -111,17 +111,6 @@ class StrategyCrossingMA(Strategy):
                     font=dict(size=18)
                 )
         return fig
-    
-    async def _fetch_data(self, endpoint: str):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(endpoint, timeout=aiohttp.ClientTimeout(total=5)) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    logger.debug(f"Received response from {endpoint}")
-                    return data
-                else:
-                    logger.error(f"Failed to fetch data from {endpoint}")
-                    return None
 
     def __columns_exist(self, df: pl.DataFrame) -> bool:
         ma_cols = []

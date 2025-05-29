@@ -1,9 +1,8 @@
 import polars as pl 
 import plotly.graph_objects as go
 from loguru import logger
-from utils import *
-import aiohttp
 
+from utils import *
 from strategy import Strategy
 
 class StrategyRSI(Strategy):
@@ -20,17 +19,21 @@ class StrategyRSI(Strategy):
             stock: str
         ) -> pl.DataFrame | None:
         url = self.url + "/rsi/" + stock 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    result = self.__process_response(data)
-                    logger.debug(f"Received RSI response for {stock}")
-                    return result
-                else:
-                    logger.error(f"Failed to fetch cross MA signal for {stock}")
-                    return None
+        response = await self._fetch_data(url)
+        if response:
+            data = self.__process_response(response)
+            return data
 
+    async def fetch_best_performance(
+            self, 
+            stock: str
+        ) -> pl.DataFrame | None:
+        url = self.url + "/bestperf/rsi/" + stock 
+        response = await self._fetch_data(url)
+        if response:
+            data = self.__process_response(response)
+            return data
+        
     def show(self, df: pl.DataFrame, upper_bound=80, lower_bound=20) -> go.Figure | None:
         if not utils.check_list_substr_in_str(["rsi", "datetime"], df.columns):
             logger.debug("Dataframe columns do not contain RSI")
