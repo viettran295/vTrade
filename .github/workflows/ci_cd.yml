@@ -27,7 +27,7 @@ jobs:
         file: ./Dockerfile
         platform: linux/arm64/v8
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/vtrade:arm64-latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/vtrade:arm64
 
   build-amd64:
     runs-on: ubuntu-24.04
@@ -48,4 +48,29 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/vtrade:x86_64-latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/vtrade:x86_64
+
+  deploy:
+    runs-on: ubuntu-24.04
+    needs: [build-arm64]
+    steps:
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_KEY }}
+        port: 22
+        script: |
+          VPS_ARCH=$(uname -m)
+          CONTAINER_NAME="vtrade"
+          ARM64_IMG="${{ secrets.DOCKER_USERNAME }}/vtrade:arm64"
+          if [ "$VPS_ARCH" == "aarch64" ]; then
+            docker pull $ARM64_IMG
+            docker stop $CONTAINER_NAME
+            docker rm $CONTAINER_NAME
+            docker run -d --name $CONTAINER_NAME -p 8050:8050 --network='host' $ARM64_IMG
+          else
+            echo "Unsupported architecture: $VPS_ARCH"
+            exit 1
+          fi
