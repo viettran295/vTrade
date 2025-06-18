@@ -4,43 +4,30 @@ from strategy import Strategy
 from strategy.crossing_ma import StrategyCrossingMA
 
 class StrategyBollingerBands(Strategy):
-    def __init__(self, moving_avg: int=20, standard_deviation: int=2):
-        self.moving_avg = moving_avg
-        self.nr_std = standard_deviation
-        self.strategy_x_ma = StrategyCrossingMA() 
+    def __init__(self):
+        super().__init__()
         self.title = "Bollinger Bands"
-        self.upper_band = "Upper_band"
-        self.lower_band = "Lower_band"
+        self.moving_avg = ""
+        self.upper_band = ""
+        self.lower_band = ""
+        self.sig = ""
 
-    @log_exectime
-    def execute(self, df: pl.DataFrame) -> pl.DataFrame:
-        if utils.df_is_none(df):
-            return None
-
-        try:
-            self.signal = f"Signal_BB_MA{self.moving_avg}_STD{self.nr_std}"
-
-            df = self.strategy_x_ma.calc_MA(df, self.moving_avg)
-            df = df.with_columns(
-                (pl.col(self.strategy_x_ma.short_ma_type) + self.nr_std * pl.col("close").rolling_std(window_size=self.moving_avg)).alias(self.upper_band),
-                (pl.col(self.strategy_x_ma.short_ma_type) - self.nr_std * pl.col("close").rolling_std(window_size=self.moving_avg)).alias(self.lower_band)
-            )
-
-            df = df.with_columns([
-                pl.when(pl.col("high") > pl.col(self.upper_band)).then(0)
-                  .when(pl.col("low") < pl.col(self.lower_band)).then(1)
-                  .otherwise(None)
-                  .alias(self.signal)
-            ])
-            return df
-        except Exception as e:
-            logger.error(f"Error while calculating Bollinger bands: {e}")
+    async def fetch_bb_signal(
+            self, 
+            stock: str
+        ) -> pl.DataFrame | None:
+        url = self.url + "/bb/" + stock 
+        response = await self._fetch_data(url)
+        if response:
+            data = self.__process_response(response)
+            return data
     
     def show(self, df: pl.DataFrame) -> go.Figure:
-        if (
-            utils.df_is_none(df) or 
-            not utils.check_list_substr_in_str([self.lower_band, self.upper_band, self.moving_avg], df.columns)
-        ):
+        if utils.df_is_none(df):
+            logger.error("Invalid DataFrame")
+            return None
+
+        if not self.__columns_exist(df):
             logger.error("Invalid DataFrame")
             return None
         
@@ -63,8 +50,8 @@ class StrategyBollingerBands(Strategy):
                         )
         fig.add_trace(go.Scatter(
                         x=df["datetime"].to_list(),
-                        y=df[self.strategy_x_ma.short_ma_type].to_list(),
-                        name=self.strategy_x_ma.short_ma_type,
+                        y=df[self.moving_avg].to_list(),
+                        name=self.moving_avg,
                     )
                 )
         fig.add_trace(go.Scatter(
@@ -78,7 +65,7 @@ class StrategyBollingerBands(Strategy):
                         y=df[self.upper_band].to_list(),
                         name=self.upper_band,
                         fill='tonexty',
-                        opacity=0.1
+                        fillcolor='rgba(255, 255, 255, 0.2)',
                     )
                 )
         fig.add_trace(go.Scatter(
@@ -86,6 +73,7 @@ class StrategyBollingerBands(Strategy):
                         y=overbound["high"].to_list(),
                         name="Over bought",
                         mode="markers",
+                        marker=dict(size=5)
                     )           
                 )
         fig.add_trace(go.Scatter(
@@ -93,6 +81,7 @@ class StrategyBollingerBands(Strategy):
                         y=underbound["low"].to_list(),
                         name="Over sell",
                         mode="markers",
+                        marker=dict(size=5)
                     )           
                 )
         fig.update_layout(
@@ -104,3 +93,37 @@ class StrategyBollingerBands(Strategy):
                         font=dict(size=18)
                 )
         return fig
+
+    def __columns_exist(self, df: pl.DataFrame) -> bool:
+        for col in df.columns:
+            if "Sig" in col:
+                self.signal = col
+            elif col.startswith("SMA"):
+                self.moving_avg = col
+            elif col.startswith("Upper"):
+                self.upper_band = col
+            elif col.startswith("Lower"):
+                self.lower_band = col
+
+        if self.moving_avg == "" or \
+            self.upper_band == "" or \
+            self.lower_band == "" or \
+            self.signal == "":
+            return False
+        return True
+    
+    @staticmethod
+    def __process_response(data: dict) -> pl.DataFrame | None:
+        if "data" in data and "columns" in data:
+            df = pl.DataFrame(data['data'])
+            df = df.with_columns(
+                pl.col(df.columns[0]).str.strptime(pl.Datetime).cast(pl.Date),
+                *[pl.col(i).cast(pl.Float64) for i in df.columns[1:]], # Unpack list
+            )
+            new_names = data["columns"]["column_names"]
+            rename_dict = dict(zip(df.columns, new_names))
+            df = df.rename(rename_dict)
+            df = df.sort(by=pl.col("datetime"), descending=False)
+            return df
+        else:
+            return None

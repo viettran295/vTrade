@@ -1,11 +1,11 @@
 from dash import callback, Input, Output, State
 from utils import *
-from strategy import StrategyCrossingMA, StrategyRSI
-import dash
+from strategy import StrategyCrossingMA, StrategyRSI, StrategyBollingerBands
 import asyncio
 
 from .dash_crossing_ma import DashCrossingMA
 from .dash_rsi import DashRSI
+from .dash_bb import DashBollingerBands
 from .dash_checklist import DashChecklist
 from .dash_tabs import DashTabs
 
@@ -14,6 +14,7 @@ class RegisterCallbacks():
     def __init__(self):
         self.x_ma = DashCrossingMA()
         self.dash_rsi = DashRSI()
+        self.dash_bb = DashBollingerBands()
         self.checklist = DashChecklist()
         self.tabs = DashTabs()
 
@@ -22,6 +23,7 @@ class RegisterCallbacks():
 
         self.strategy_x_ma = StrategyCrossingMA()
         self.strategy_rsi = StrategyRSI()
+        self.strategy_bb = StrategyBollingerBands()
         self.strategy_name = ""
 
     def register_MA_plot_callbacks(self):
@@ -90,7 +92,8 @@ class RegisterCallbacks():
                     logger.error(f"Error plotting best performance crossing MA: {e}")
                     return self.not_display
             return self.not_display
-        
+    
+    def register_best_performance_RSI(self):
         @callback(
             Output(self.dash_rsi.rsi_graph_id, "figure", allow_duplicate=True),
             Output(self.dash_rsi.id_layout, "style", allow_duplicate=True),
@@ -129,6 +132,25 @@ class RegisterCallbacks():
                         return self.strategy_rsi.show(df_rsi), self.display
                 except Exception as e:
                     logger.error(f"Error plotting RSI: {e}")
+                    return self.not_display
+            else:
+                return self.not_display
+            
+    def register_BB_plot_callback(self):
+        @callback (
+            Output(self.dash_bb.bb_graph_id, "figure"),
+            Output(self.dash_bb.id_layout, "style"),
+            Input(self.checklist.id, "value"),
+            State("search-stock", "value"),
+        )
+        def plot_bb(checklist, search_stock):
+            if self.checklist.bb_val in checklist:
+                try:
+                    df_bb = asyncio.run(self.strategy_bb.fetch_bb_signal(search_stock))
+                    if df_bb is not None:
+                        return self.strategy_bb.show(df_bb), self.display
+                except Exception as e:
+                    logger.error(f"Error plotting Bollinger Bands: {e}")
                     return self.not_display
             else:
                 return self.not_display

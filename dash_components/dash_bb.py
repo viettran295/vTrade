@@ -1,11 +1,11 @@
 from dash import dcc, html
 import dash_bootstrap_components as dbc
 
-class DashRSI:
+class DashBollingerBands:
     def __init__(self):
-        self.rsi_graph_id = "rsi-graph"
-        self.bestperf_button = "rsi-bestperf-button"
-        self.id_layout = "rsi-layout"
+        self.bb_graph_id = "bb-graph"
+        self.bestperf_button = "bb-bestperf-button"
+        self.id_layout = "bb-layout"
     
     def layout(self):
         return html.Div(
@@ -26,7 +26,7 @@ class DashRSI:
 
                         ),
                         dcc.Graph(
-                            id=self.rsi_graph_id
+                            id=self.bb_graph_id
                         )
                     ],
                 )

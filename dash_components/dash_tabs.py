@@ -2,6 +2,7 @@ from dash import html
 import dash_bootstrap_components as dbc
 from .dash_crossing_ma import DashCrossingMA
 from .dash_rsi import DashRSI
+from .dash_bb import DashBollingerBands
 
 class DashTabs():
     def __init__(self):
@@ -11,6 +12,7 @@ class DashTabs():
 
         self.x_ma = DashCrossingMA()
         self.rsi = DashRSI()
+        self.bb = DashBollingerBands()
 
     def layout(self):
         return dbc.Tabs(
@@ -24,6 +26,7 @@ class DashTabs():
                                 html.Br(),
                                 self.x_ma.layout(),
                                 html.Br(),
+                                self.bb.layout(),
                                 html.Br(),
                                 self.rsi.layout(),
                                 html.Br(),

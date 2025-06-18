@@ -144,6 +144,8 @@ def update_stock_data(_, search_stock):
 rc.register_MA_plot_callbacks()
 rc.register_RSI_plot_callback()
 rc.register_best_performance_MA()
+rc.register_best_performance_RSI()
+rc.register_BB_plot_callback()
 
 if __name__ == "__main__":
     app.run_server(debug=True)

@@ -6,7 +6,7 @@ class DashChecklist():
         self.id = "checklist-id"
         self.x_ma_val = "x_ma"
         self.rsi_val = "rsi"
-        self.b_bands_val = "b_bands"
+        self.bb_val = "b_bands"
     
     def layout(self):
         return html.Div(
@@ -23,16 +23,16 @@ class DashChecklist():
                                         
                                 },
                                 {
+                                    'label': html.Div(['Bollinger bands'], 
+                                                    style={'color': utils.colors["text"], 'font-size': 20}
+                                            ),
+                                    'value': self.bb_val
+                                },
+                                {
                                     'label': html.Div(['RSI'], 
                                                     style={'color': utils.colors["text"], 'font-size': 20}
                                             ),
                                     'value': self.rsi_val
-                                },
-                                {
-                                    'label': html.Div(['Bollinger bands'], 
-                                                    style={'color': utils.colors["text"], 'font-size': 20}
-                                            ),
-                                    'value': self.b_bands_val
                                 }
                             ],
                             value=['x_ma'],
