@@ -22,7 +22,15 @@ class StrategyBollingerBands(Strategy):
             data = self.__process_response(response)
             return data
     
-    def show(self, df: pl.DataFrame) -> go.Figure:
+    async def fetch_best_performance(self, stock: str):
+        prefix = '/bestperf/bb/'
+        url = self.url + prefix + stock
+        response = await self._fetch_data(url)
+        if response is not None:
+            data = self.__process_response(response)
+            return data
+    
+    def show(self, df: pl.DataFrame) -> go.Figure | None:
         if utils.df_is_none(df):
             logger.error("Invalid DataFrame")
             return None

@@ -154,3 +154,27 @@ class RegisterCallbacks():
                     return self.not_display
             else:
                 return self.not_display
+                
+    def register_best_performance_BB(self):
+        @callback(
+            Output(self.dash_bb.bb_graph_id, "figure", allow_duplicate=True),
+            Output(self.dash_bb.id_layout, "style", allow_duplicate=True),
+            Input(self.dash_bb.bestperf_button, "n_clicks"),
+            State("search-stock", "value"),
+            prevent_initial_call=True
+        )
+        def plot_best_performance_bb(
+            _,
+            search_stock,
+        ):
+            if search_stock:
+                try:
+                    df = asyncio.run(
+                            self.strategy_bb.fetch_best_performance(search_stock)
+                        )
+                    if df is not None:
+                        return self.strategy_bb.show(df), self.display
+                except Exception as e:
+                    logger.error(f"Error plotting best performance BB: {e}")
+                    return self.not_display
+            return self.not_display
