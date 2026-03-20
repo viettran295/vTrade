@@ -10,7 +10,7 @@ from .dash_checklist import DashChecklist
 from .dash_tabs import DashTabs
 
 
-class RegisterCallbacks():
+class RegisterCallbacks:
     def __init__(self):
         self.x_ma = DashCrossingMA()
         self.dash_rsi = DashRSI()
@@ -40,7 +40,7 @@ class RegisterCallbacks():
         )
         def plot_crossing_ma(
             _,
-            __, 
+            __,
             checklist,
             search_stock,
             short_ma: int = 20,
@@ -53,20 +53,17 @@ class RegisterCallbacks():
             if search_stock:
                 try:
                     df = asyncio.run(
-                            self.strategy_x_ma.fetch_cross_ma_signal(
-                                search_stock, 
-                                short_ma, 
-                                long_ma,
-                                ma_type
-                            )
+                        self.strategy_x_ma.fetch_cross_ma_signal(
+                            search_stock, short_ma, long_ma, ma_type
                         )
+                    )
                     if df is not None:
                         return self.strategy_x_ma.show(df), self.display
                 except Exception as e:
                     logger.error(f"Error plotting crossing MA: {e}")
                     return self.not_display
             return self.not_display
-        
+
     def register_best_performance_MA(self):
         @callback(
             Output(self.x_ma.crossing_ma_graph, "figure", allow_duplicate=True),
@@ -74,7 +71,7 @@ class RegisterCallbacks():
             Input(self.x_ma.bestperf_button, "n_clicks"),
             State("search-stock", "value"),
             State(self.x_ma.ma_types, "value"),
-            prevent_initial_call=True
+            prevent_initial_call=True,
         )
         def plot_best_performance_ma(
             _,
@@ -84,22 +81,22 @@ class RegisterCallbacks():
             if search_stock:
                 try:
                     df = asyncio.run(
-                            self.strategy_x_ma.fetch_best_performance(search_stock, ma_type)
-                        )
+                        self.strategy_x_ma.fetch_best_performance(search_stock, ma_type)
+                    )
                     if df is not None:
                         return self.strategy_x_ma.show(df), self.display
                 except Exception as e:
                     logger.error(f"Error plotting best performance crossing MA: {e}")
                     return self.not_display
             return self.not_display
-    
+
     def register_best_performance_RSI(self):
         @callback(
             Output(self.dash_rsi.rsi_graph_id, "figure", allow_duplicate=True),
             Output(self.dash_rsi.id_layout, "style", allow_duplicate=True),
             Input(self.dash_rsi.bestperf_button, "n_clicks"),
             State("search-stock", "value"),
-            prevent_initial_call=True
+            prevent_initial_call=True,
         )
         def plot_best_performance_rsi(
             _,
@@ -108,8 +105,8 @@ class RegisterCallbacks():
             if search_stock:
                 try:
                     df = asyncio.run(
-                            self.strategy_rsi.fetch_best_performance(search_stock)
-                        )
+                        self.strategy_rsi.fetch_best_performance(search_stock)
+                    )
                     if df is not None:
                         return self.strategy_rsi.show(df), self.display
                 except Exception as e:
@@ -118,7 +115,7 @@ class RegisterCallbacks():
             return self.not_display
 
     def register_RSI_plot_callback(self):
-        @callback (
+        @callback(
             Output(self.dash_rsi.rsi_graph_id, "figure"),
             Output(self.dash_rsi.id_layout, "style"),
             Input(self.checklist.id, "value"),
@@ -127,7 +124,9 @@ class RegisterCallbacks():
         def plot_rsi(checklist, search_stock):
             if self.checklist.rsi_val in checklist:
                 try:
-                    df_rsi = asyncio.run(self.strategy_rsi.fetch_rsi_signal(search_stock))
+                    df_rsi = asyncio.run(
+                        self.strategy_rsi.fetch_rsi_signal(search_stock)
+                    )
                     if df_rsi is not None:
                         return self.strategy_rsi.show(df_rsi), self.display
                 except Exception as e:
@@ -135,9 +134,9 @@ class RegisterCallbacks():
                     return self.not_display
             else:
                 return self.not_display
-            
+
     def register_BB_plot_callback(self):
-        @callback (
+        @callback(
             Output(self.dash_bb.bb_graph_id, "figure"),
             Output(self.dash_bb.id_layout, "style"),
             Input(self.checklist.id, "value"),
@@ -154,14 +153,14 @@ class RegisterCallbacks():
                     return self.not_display
             else:
                 return self.not_display
-                
+
     def register_best_performance_BB(self):
         @callback(
             Output(self.dash_bb.bb_graph_id, "figure", allow_duplicate=True),
             Output(self.dash_bb.id_layout, "style", allow_duplicate=True),
             Input(self.dash_bb.bestperf_button, "n_clicks"),
             State("search-stock", "value"),
-            prevent_initial_call=True
+            prevent_initial_call=True,
         )
         def plot_best_performance_bb(
             _,
@@ -170,8 +169,8 @@ class RegisterCallbacks():
             if search_stock:
                 try:
                     df = asyncio.run(
-                            self.strategy_bb.fetch_best_performance(search_stock)
-                        )
+                        self.strategy_bb.fetch_best_performance(search_stock)
+                    )
                     if df is not None:
                         return self.strategy_bb.show(df), self.display
                 except Exception as e:

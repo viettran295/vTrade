@@ -12,9 +12,11 @@ bb = StrategyBollingerBands()
 strategies = [x_ma, rsi, bb]
 ss = SignalScanner(strategy=strategies, stocks_list=stocks)
 
+
 @log_exectime
 def main():
     ss.scan()
-            
+
+
 if __name__ == "__main__":
     main()
