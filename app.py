@@ -144,6 +144,7 @@ rc.register_BB_plot_callback()
 rc.register_best_performance_MA()
 rc.register_best_performance_RSI()
 rc.register_best_performance_BB()
+rc.register_fundamental()
 
 if __name__ == "__main__":
     app.run_server(debug=True)
