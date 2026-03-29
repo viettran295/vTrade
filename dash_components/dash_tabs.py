@@ -4,6 +4,8 @@ from .dash_crossing_ma import DashCrossingMA
 from .dash_rsi import DashRSI
 from .dash_bb import DashBollingerBands
 
+from .dash_balance_sheet import DashBalanceSheet
+
 
 class DashTabs:
     def __init__(self):
@@ -14,6 +16,8 @@ class DashTabs:
         self.x_ma = DashCrossingMA()
         self.rsi = DashRSI()
         self.bb = DashBollingerBands()
+
+        self.balance_sheet = DashBalanceSheet()
 
     def layout(self):
         return dbc.Tabs(
@@ -40,9 +44,12 @@ class DashTabs:
                     style={"marginBottom": "20px"},
                 ),
                 dbc.Tab(
-                    tab_id=self.paper_trading_id,
+                    tab_id=self.fundamental_analysis_id,
                     label="Fundamental Analysis",
-                    children=[],
+                    children=[
+                        html.Br(),
+                        self.balance_sheet.layout(),
+                    ],
                     active_tab_style={
                         "fontStyle": "italic",
                     },

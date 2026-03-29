@@ -2,7 +2,6 @@ from dash import Dash, html, callback, Input, Output, State, dcc, ctx
 import dash
 import dash_bootstrap_components as dbc
 import utils
-from utils import DataFetch
 from dash_components import RegisterCallbacks
 from dotenv import load_dotenv
 
@@ -18,7 +17,6 @@ server = app.server
 app._favicon = "bull_icon.ico"
 
 rc = RegisterCallbacks()
-fetcher = DataFetch()
 
 app.layout = dbc.Container(
     style={
@@ -144,6 +142,7 @@ rc.register_BB_plot_callback()
 rc.register_best_performance_MA()
 rc.register_best_performance_RSI()
 rc.register_best_performance_BB()
+rc.register_fundamental()
 
 if __name__ == "__main__":
     app.run_server(debug=True)
