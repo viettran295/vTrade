@@ -73,7 +73,7 @@ dependencies = [
     "tornado==6.4.2",
     "traitlets==5.14.3",
     "typing-extensions==4.12.2",
-    "urllib3==2.3.0",
+    "urllib3==2.6.3",
     "wcwidth==0.2.13",
     "websockets>=15.0.1",
     "werkzeug==3.0.6",
