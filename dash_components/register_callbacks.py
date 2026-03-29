@@ -1,13 +1,16 @@
 from dash import callback, Input, Output, State
-from utils import *
-from strategy import StrategyCrossingMA, StrategyRSI, StrategyBollingerBands
 import asyncio
+
+from utils.comm_interface import *
+from strategy import StrategyCrossingMA, StrategyRSI, StrategyBollingerBands
+from fundamental import FinancialStatement, BalanceSheet
 
 from .dash_crossing_ma import DashCrossingMA
 from .dash_rsi import DashRSI
 from .dash_bb import DashBollingerBands
 from .dash_checklist import DashChecklist
 from .dash_tabs import DashTabs
+from .dash_balance_sheet import DashBalanceSheet
 
 
 class RegisterCallbacks:
@@ -17,14 +20,19 @@ class RegisterCallbacks:
         self.dash_bb = DashBollingerBands()
         self.checklist = DashChecklist()
         self.tabs = DashTabs()
+        self.dash_balance_sheet = DashBalanceSheet()
 
         self.not_display = {}, {"display": "none"}
         self.display = {"display": "block"}
 
-        self.strategy_x_ma = StrategyCrossingMA()
-        self.strategy_rsi = StrategyRSI()
-        self.strategy_bb = StrategyBollingerBands()
+        self.strategy_x_ma = StrategyCrossingMA(HttpComm)
+        self.strategy_rsi = StrategyRSI(HttpComm)
+        self.strategy_bb = StrategyBollingerBands(HttpComm)
         self.strategy_name = ""
+
+        self.financial_statement = FinancialStatement()
+        self.financial_statement._data_fetcher = HttpComm
+        self.balance_sheet = BalanceSheet()
 
     def register_MA_plot_callbacks(self):
         @callback(
@@ -175,5 +183,32 @@ class RegisterCallbacks:
                         return self.strategy_bb.show(df), self.display
                 except Exception as e:
                     logger.error(f"Error plotting best performance BB: {e}")
+                    return self.not_display
+            return self.not_display
+
+    def register_fundamental(self):
+        @callback(
+            Output(self.dash_balance_sheet.id_balance_sheet_graph, "figure"),
+            Output(self.dash_balance_sheet.id_layout, "style"),
+            Input("activate-search", "data"),
+            State("search-stock", "value"),
+            prevent_initial_call=True,
+        )
+        def plot_fundamental(_, search_stock):
+            if search_stock:
+                try:
+                    logger.debug("Fetch financial statement")
+                    data = asyncio.run(
+                        self.financial_statement.fetch_financial_statement(search_stock)
+                    )
+                    if data is not None:
+                        validated_fs = self.financial_statement.model_validate(data)
+                        if validated_fs.balance_sheet:
+                            return (
+                                validated_fs.balance_sheet.show_current_ratio(),
+                                self.display,
+                            )
+                except Exception as e:
+                    logger.error(f"Error fetching financial statement: {e}")
                     return self.not_display
             return self.not_display

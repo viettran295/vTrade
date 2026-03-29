@@ -1,12 +1,15 @@
 import plotly.graph_objects as go
-from utils import *
+import polars as pl
+from loguru import logger
+
+from utils.utils import df_is_none
+from utils.comm_interface import CommunicationInterface
 from strategy import Strategy
-from strategy.crossing_ma import StrategyCrossingMA
 
 
 class StrategyBollingerBands(Strategy):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, data_fetcher: CommunicationInterface):
+        super().__init__(data_fetcher)
         self.title = "Bollinger Bands"
         self.moving_avg = ""
         self.upper_band = ""
@@ -15,7 +18,7 @@ class StrategyBollingerBands(Strategy):
 
     async def fetch_bb_signal(self, stock: str) -> pl.DataFrame | None:
         url = self.url + "/bb/" + stock
-        response = await self._fetch_data(url)
+        response = await self._data_fetcher.get(url)
         if response:
             data = self.__process_response(response)
             return data
@@ -23,13 +26,13 @@ class StrategyBollingerBands(Strategy):
     async def fetch_best_performance(self, stock: str):
         prefix = "/bestperf/bb/"
         url = self.url + prefix + stock
-        response = await self._fetch_data(url)
+        response = await self._data_fetcher.get(url)
         if response is not None:
             data = self.__process_response(response)
             return data
 
     def show(self, df: pl.DataFrame) -> go.Figure | None:
-        if utils.df_is_none(df):
+        if df_is_none(df):
             logger.error("Invalid DataFrame")
             return None
 
