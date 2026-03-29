@@ -1,14 +1,20 @@
-import aiohttp
 import polars as pl
 import plotly.graph_objects as go
 from loguru import logger
-import utils
+
+from utils.utils import df_is_none
+from utils.comm_interface import CommunicationInterface
 from strategy import Strategy
 
 
 class StrategyCrossingMA(Strategy):
-    def __init__(self, short_MA: int = 20, long_MA: int = 50):
-        super().__init__()
+    def __init__(
+        self,
+        data_fetcher: CommunicationInterface,
+        short_MA: int = 20,
+        long_MA: int = 50,
+    ):
+        super().__init__(data_fetcher)
         self.short_ma_type = ""
         self.long_ma_type = ""
         self.short_ma = short_MA
@@ -25,7 +31,7 @@ class StrategyCrossingMA(Strategy):
         endpoint = (
             self.url + ma_type + stock + f"?short_ma={short_ma}&long_ma={long_ma}"
         )
-        response = await self._fetch_data(endpoint)
+        response = await self._data_fetcher.get(endpoint)
         if response is not None:
             data = self.__process_response(response)
             return data
@@ -37,13 +43,13 @@ class StrategyCrossingMA(Strategy):
     ):
         prefix = "/bestperf/" + ma_type.lower() + "/"
         url = self.url + prefix + stock
-        response = await self._fetch_data(url)
+        response = await self._data_fetcher.get(url)
         if response is not None:
             data = self.__process_response(response)
             return data
 
     def show(self, df: pl.DataFrame) -> go.Figure | None:
-        if utils.df_is_none(df):
+        if df_is_none(df):
             logger.error("Dataframe for MA calculation is None")
             return
 

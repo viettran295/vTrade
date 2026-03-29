@@ -4,9 +4,11 @@ from enum import Enum
 from .balance_sheet import BalanceSheet
 from utils.comm_interface import *
 
+
 class Period(Enum):
     ANNUALLY = "annually"
     QUARLY = "quarly"
+
 
 # class IncomeStatement(BaseModel):
 #     cost_and_expenses: int

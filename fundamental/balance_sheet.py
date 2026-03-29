@@ -26,7 +26,7 @@ class BalanceSheet(BaseModel):
     def show_current_ratio(self) -> go.Figure | None:
         if self.current_assets <= 0 or self.current_liabilities <= 0:
             return None
-        
+
         fig = make_subplots(rows=1, cols=2, subplot_titles=("Assets - Liabilities", ""))
         fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
         fig.add_trace(

@@ -2,29 +2,36 @@ import polars as pl
 import plotly.graph_objects as go
 from loguru import logger
 
-from utils import *
+from utils.utils import check_list_substr_in_str
+from utils.comm_interface import *
 from strategy import Strategy
 
 
 class StrategyRSI(Strategy):
     RSI = ""
 
-    def __init__(self, period: int = 14, upper_bound: int = 80, lower_bound: int = 20):
-        super().__init__()
+    def __init__(
+        self,
+        data_fetcher: CommunicationInterface,
+        period: int = 14,
+        upper_bound: int = 80,
+        lower_bound: int = 20,
+    ):
+        super().__init__(data_fetcher)
         self.period = period
         self.upper_bound = upper_bound
         self.lower_bound = lower_bound
 
     async def fetch_rsi_signal(self, stock: str) -> pl.DataFrame | None:
         url = self.url + "/rsi/" + stock
-        response = await self._fetch_data(url)
+        response = await self._data_fetcher.get(url)
         if response:
             data = self.__process_response(response)
             return data
 
     async def fetch_best_performance(self, stock: str) -> pl.DataFrame | None:
         url = self.url + "/bestperf/rsi/" + stock
-        response = await self._fetch_data(url)
+        response = await self._data_fetcher.get(url)
         if response:
             data = self.__process_response(response)
             return data
@@ -32,7 +39,7 @@ class StrategyRSI(Strategy):
     def show(
         self, df: pl.DataFrame, upper_bound=80, lower_bound=20
     ) -> go.Figure | None:
-        if not utils.check_list_substr_in_str(["rsi", "datetime"], df.columns):
+        if not check_list_substr_in_str(["rsi", "datetime"], df.columns):
             logger.debug("Dataframe columns do not contain RSI")
             return
 

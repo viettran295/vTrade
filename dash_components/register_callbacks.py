@@ -25,9 +25,9 @@ class RegisterCallbacks:
         self.not_display = {}, {"display": "none"}
         self.display = {"display": "block"}
 
-        self.strategy_x_ma = StrategyCrossingMA()
-        self.strategy_rsi = StrategyRSI()
-        self.strategy_bb = StrategyBollingerBands()
+        self.strategy_x_ma = StrategyCrossingMA(HttpComm)
+        self.strategy_rsi = StrategyRSI(HttpComm)
+        self.strategy_bb = StrategyBollingerBands(HttpComm)
         self.strategy_name = ""
 
         self.financial_statement = FinancialStatement()
@@ -188,10 +188,7 @@ class RegisterCallbacks:
 
     def register_fundamental(self):
         @callback(
-            Output(
-                self.dash_balance_sheet.id_balance_sheet_graph,
-                "figure"
-            ),
+            Output(self.dash_balance_sheet.id_balance_sheet_graph, "figure"),
             Output(self.dash_balance_sheet.id_layout, "style"),
             Input("activate-search", "data"),
             State("search-stock", "value"),
@@ -207,7 +204,10 @@ class RegisterCallbacks:
                     if data is not None:
                         validated_fs = self.financial_statement.model_validate(data)
                         if validated_fs.balance_sheet:
-                            return validated_fs.balance_sheet.show_current_ratio(), self.display
+                            return (
+                                validated_fs.balance_sheet.show_current_ratio(),
+                                self.display,
+                            )
                 except Exception as e:
                     logger.error(f"Error fetching financial statement: {e}")
                     return self.not_display

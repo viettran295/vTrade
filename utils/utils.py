@@ -1,8 +1,6 @@
 from loguru import logger
 import polars as pl
 import time
-import duckdb
-import os
 from dotenv import load_dotenv
 
 load_dotenv()

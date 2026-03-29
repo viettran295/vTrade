@@ -1,17 +1,17 @@
 import polars as pl
 import plotly.graph_objects as go
-import aiohttp
 from abc import ABC, abstractmethod
 
-from utils import *
+from utils.comm_interface import CommunicationInterface
 
 
 class Strategy(ABC):
-    def __init__(self) -> None:
+    def __init__(self, data_fetcher: CommunicationInterface) -> None:
         self.url = "http://localhost:8000"
         self.columns = ["datetime", "high", "low", "open", "close"]
         self.signal = "signal"
         self.bin_signal = {"buy": 1, "sell": 0}
+        self._data_fetcher = data_fetcher
 
     @abstractmethod
     def show(self, df: pl.DataFrame) -> go.Figure | None:
@@ -36,16 +36,3 @@ class Strategy(ABC):
             font=dict(size=18),
         )
         return fig
-
-    async def _fetch_data(self, endpoint: str):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                endpoint, timeout=aiohttp.ClientTimeout(total=5)
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    logger.debug(f"Received response from {endpoint}")
-                    return data
-                else:
-                    logger.error(f"Failed to fetch data from {endpoint}")
-                    return None

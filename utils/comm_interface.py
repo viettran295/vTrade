@@ -3,10 +3,12 @@ import aiohttp
 
 from loguru import logger
 
+
 class CommunicationInterface(ABC):
     @abstractmethod
     async def get(endpoint: str):
         pass
+
 
 class HttpComm(CommunicationInterface):
     @staticmethod
