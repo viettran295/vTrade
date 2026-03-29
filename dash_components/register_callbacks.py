@@ -1,8 +1,9 @@
 from dash import callback, Input, Output, State
-from utils import *
-from strategy import StrategyCrossingMA, StrategyRSI, StrategyBollingerBands
-from fundamental import FinancialStatement, FinancialReport, BalanceSheet
 import asyncio
+
+from utils.comm_interface import *
+from strategy import StrategyCrossingMA, StrategyRSI, StrategyBollingerBands
+from fundamental import FinancialStatement, BalanceSheet
 
 from .dash_crossing_ma import DashCrossingMA
 from .dash_rsi import DashRSI
@@ -30,6 +31,7 @@ class RegisterCallbacks:
         self.strategy_name = ""
 
         self.financial_statement = FinancialStatement()
+        self.financial_statement._data_fetcher = HttpComm
         self.balance_sheet = BalanceSheet()
 
     def register_MA_plot_callbacks(self):
@@ -200,12 +202,12 @@ class RegisterCallbacks:
                 try:
                     logger.debug("Fetch financial statement")
                     data = asyncio.run(
-                        self.financial_statement.fetch_financial_statment(search_stock)
+                        self.financial_statement.fetch_financial_statement(search_stock)
                     )
                     if data is not None:
-                        fin_report = FinancialReport(**data)
-                        self.balance_sheet = fin_report.balance_sheet
-                        return self.balance_sheet.show_current_ratio(), self.display
+                        validated_fs = self.financial_statement.model_validate(data)
+                        if validated_fs.balance_sheet:
+                            return validated_fs.balance_sheet.show_current_ratio(), self.display
                 except Exception as e:
                     logger.error(f"Error fetching financial statement: {e}")
                     return self.not_display
