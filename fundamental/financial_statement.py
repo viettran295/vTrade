@@ -49,8 +49,9 @@ class FinancialStatement(BaseModel):
             return None
 
         dates = [item.financial_facts.end_date for item in self.balance_sheet]
-        assets = [item.current_assets for item in self.balance_sheet]
+        assets = [item.current_assets - item.inventory for item in self.balance_sheet]
         liabilities = [item.current_liabilities for item in self.balance_sheet]
+        inventory = [item.inventory for item in self.balance_sheet]
 
         hover_template = "%{y:$,.2f}"
         fig = go.Figure()
@@ -62,6 +63,15 @@ class FinancialStatement(BaseModel):
                 marker_color="#198754",
                 hovertemplate=hover_template,
                 name="Current assets",
+            ),
+        )
+        fig.add_trace(
+            go.Bar(
+                x=dates,
+                y=inventory,
+                marker_color="#0066ff",
+                hovertemplate=hover_template,
+                name="Inventory",
             ),
         )
         fig.add_trace(
