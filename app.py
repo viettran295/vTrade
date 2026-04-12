@@ -63,12 +63,6 @@ app.layout = dbc.Container(
                     [
                         dbc.Card(
                             [
-                                dbc.CardHeader(
-                                    html.H3("Configuration"),
-                                    style={
-                                        "backgroundColor": utils.colors["sidebar"],
-                                    },
-                                ),
                                 dbc.CardBody(
                                     [
                                         dbc.Col(
@@ -114,6 +108,7 @@ app.layout = dbc.Container(
                         "maxHeight": "900px",  # Set a max height
                         "overflowY": "auto",  # Enable vertical scrolling when needed
                     },
+                    width=10
                 ),
             ],
             className="gx-0",
@@ -145,4 +140,4 @@ rc.register_best_performance_BB()
 rc.register_fundamental()
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run(debug=True)

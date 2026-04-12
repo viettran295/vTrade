@@ -1,4 +1,4 @@
-from dash import html
+from dash import html, dcc
 import dash_bootstrap_components as dbc
 from .dash_crossing_ma import DashCrossingMA
 from .dash_rsi import DashRSI
@@ -20,11 +20,26 @@ class DashTabs:
         self.balance_sheet = DashBalanceSheet()
 
     def layout(self):
-        return dbc.Tabs(
+        # Common styles for both tabs
+        tab_style = {
+            "padding": "12px",
+            "backgroundColor": "#222",  # Matching your Darkly theme
+            "color": "white",
+            "borderTopLeftRadius": "15px",  # The Curve
+            "borderTopRightRadius": "15px", # The Curve
+            "border": "1px solid #444",
+            "marginRight": "10px", # Gap between tabs
+        }
+        tab_selected_style = {
+            **tab_style,
+            "borderTop": "3px solid #198754", # Green accent line
+            "fontStyle": "italic",
+        }
+        return dcc.Tabs(
             id=self.id_layout,
             children=[
-                dbc.Tab(
-                    tab_id=self.technical_analysis_id,
+                dcc.Tab(
+                    id=self.technical_analysis_id,
                     label="Technical Analysis",
                     children=[
                         html.Br(),
@@ -35,27 +50,18 @@ class DashTabs:
                         self.rsi.layout(),
                         html.Br(),
                     ],
-                    active_tab_style={
-                        "fontStyle": "italic",
-                    },
-                    active_label_style={
-                        "color": "#000000",
-                    },
-                    style={"marginBottom": "20px"},
+                    selected_style=tab_selected_style,
+                    style=tab_style
                 ),
-                dbc.Tab(
-                    tab_id=self.fundamental_analysis_id,
+                dcc.Tab(
+                    id=self.fundamental_analysis_id,
                     label="Fundamental Analysis",
                     children=[
                         html.Br(),
                         self.balance_sheet.layout(),
                     ],
-                    active_tab_style={
-                        "fontStyle": "italic",
-                    },
-                    active_label_style={
-                        "color": "#000000",
-                    },
+                    selected_style=tab_selected_style,
+                    style=tab_style
                 ),
             ],
         )
