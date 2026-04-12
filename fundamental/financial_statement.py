@@ -44,14 +44,18 @@ class FinancialStatement(BaseModel):
         else:
             return None
 
-    def show_current_ratio(self) -> go.Figure | None:
+    def show_balance_sheet(self) -> go.Figure | None:
         if len(self.balance_sheet) == 0:
             return None
 
         dates = [item.financial_facts.end_date for item in self.balance_sheet]
         assets = [item.current_assets - item.inventory for item in self.balance_sheet]
-        liabilities = [item.current_liabilities for item in self.balance_sheet]
         inventory = [item.inventory for item in self.balance_sheet]
+        assets_plus_inventory = [a + i for a, i in zip(assets, inventory)]
+        liabilities = [item.current_liabilities for item in self.balance_sheet]
+
+        total_assets = [item.total_assets for item in self.balance_sheet]
+        total_liabilities = [item.total_liabilities for item in self.balance_sheet]
 
         hover_template = "%{y:$,.2f}"
         fig = go.Figure()
@@ -63,6 +67,7 @@ class FinancialStatement(BaseModel):
                 marker_color="#198754",
                 hovertemplate=hover_template,
                 name="Current assets",
+                offsetgroup=0,
             ),
         )
         fig.add_trace(
@@ -72,6 +77,8 @@ class FinancialStatement(BaseModel):
                 marker_color="#0066ff",
                 hovertemplate=hover_template,
                 name="Inventory",
+                offsetgroup=0,
+                base=assets
             ),
         )
         fig.add_trace(
@@ -81,14 +88,37 @@ class FinancialStatement(BaseModel):
                 marker_color="#ff7700",
                 hovertemplate=hover_template,
                 name="Current liabilities",
+                offsetgroup=0,
+                base=assets_plus_inventory
+            ),
+        )
+        fig.add_trace(
+            go.Bar(
+                x=dates,
+                y=total_assets,
+                marker_color="#198754",
+                hovertemplate=hover_template,
+                name="Total assets",
+                offsetgroup=1
+            ),
+        )
+        fig.add_trace(
+            go.Bar(
+                x=dates,
+                y=total_liabilities,
+                marker_color="#ff7700",
+                hovertemplate=hover_template,
+                name="Total liabilities",
+                offsetgroup=1
             ),
         )
         fig.update_layout(
             template="plotly_dark",
             # 'relative' stacks positive values above 0 and negative below 0
             barmode="relative",
-            title_text="Balance Sheet Composition",
+            title_text="Balance Sheet",
             yaxis_title="USD",
+            bargroupgap=0.1,
             xaxis=dict(
                 type="category",  # Treats the date as a label rather than a timeline
                 tickformat="%Y-%m-%d",

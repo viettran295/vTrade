@@ -205,7 +205,7 @@ class RegisterCallbacks:
                         validated_fs = self.financial_statement.model_validate(data)
                         if validated_fs.balance_sheet:
                             return (
-                                validated_fs.show_current_ratio(),
+                                validated_fs.show_balance_sheet(),
                                 self.display,
                             )
                 except Exception as e:
