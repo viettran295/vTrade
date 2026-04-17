@@ -81,7 +81,9 @@ def test_bollingerbands_graph(page, app_url):
     expect(page.get_by_role("checkbox", name="Bollinger bands")).to_be_visible(timeout=60000)
     page.get_by_role("checkbox", name="Bollinger bands").check()
     # Verify the Bollinger bands graph exists
-    expect(page.locator("#bb-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag")).to_be_visible(timeout=60000)
+    target = page.locator("#bb-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag")
+    target.scroll_into_view_if_needed()
+    expect(target).to_be_visible(timeout=60000)
 
 def test_rsi_graph(page, app_url):
     """
@@ -97,7 +99,9 @@ def test_rsi_graph(page, app_url):
     expect(page.get_by_role("checkbox", name="RSI")).to_be_visible(timeout=60000)
     page.get_by_role("checkbox", name="RSI").check()
     # Verify the Bollinger bands graph exists
-    expect(page.locator("#rsi-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag")).to_be_visible(timeout=60000)
+    target = page.locator("#rsi-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag")
+    target.scroll_into_view_if_needed()
+    expect(target).to_be_visible(timeout=60000)
 
 def test_fundamental_graph(page, app_url):
     """
