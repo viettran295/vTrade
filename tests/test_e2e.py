@@ -81,6 +81,9 @@ def test_bollingerbands_graph(page, app_url):
     expect(page.get_by_role("checkbox", name="Bollinger bands")).to_be_visible(timeout=60000)
     page.get_by_role("checkbox", name="Bollinger bands").check()
     # Verify the Bollinger bands graph exists
+    bb_graph = page.locator("#bb-graph")
+    expect(bb_graph).to_be_visible(timeout=60000)
+    bb_graph.scroll_into_view_if_needed()
     expect(page.locator("#bb-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag")).to_be_visible(timeout=60000)
 
 def test_rsi_graph(page, app_url):
@@ -97,6 +100,9 @@ def test_rsi_graph(page, app_url):
     expect(page.get_by_role("checkbox", name="RSI")).to_be_visible(timeout=60000)
     page.get_by_role("checkbox", name="RSI").check()
     # Verify the Bollinger bands graph exists
+    rsi_graph = page.locator("#rsi-graph")
+    expect(rsi_graph).to_be_visible(timeout=60000)
+    rsi_graph.scroll_into_view_if_needed()
     expect(page.locator("#rsi-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag")).to_be_visible(timeout=60000)
 
 def test_fundamental_graph(page, app_url):
