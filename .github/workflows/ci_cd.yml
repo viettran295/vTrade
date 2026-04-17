@@ -30,8 +30,13 @@ jobs:
         uv sync --locked --all-extras --dev
         uv run playwright install --with-deps
 
+    - name: Pull Docker backend images
+      run: |
+        docker pull viettrann/fundamental:latest
+        docker pull viettrann/str-proc:x86_64
+
     - name: Run tests
-      run: uv run pytest tests
+      run: uv run pytest tests --browser chromium
 
     - name: Upload Test Results
       if: always()
