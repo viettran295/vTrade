@@ -4,6 +4,7 @@ import asyncio
 from utils.comm_interface import *
 from strategy import StrategyCrossingMA, StrategyRSI, StrategyBollingerBands
 from fundamental import FinancialStatement, BalanceSheet
+from common import FUNDAMENTAL_DATA_CACHE_ID
 
 from .dash_crossing_ma import DashCrossingMA
 from .dash_rsi import DashRSI
@@ -11,6 +12,7 @@ from .dash_bb import DashBollingerBands
 from .dash_checklist import DashChecklist
 from .dash_tabs import DashTabs
 from .dash_balance_sheet import DashBalanceSheet
+from .dash_cash_flow import DashCashFlow
 
 
 class RegisterCallbacks:
@@ -21,6 +23,7 @@ class RegisterCallbacks:
         self.checklist = DashChecklist()
         self.tabs = DashTabs()
         self.dash_balance_sheet = DashBalanceSheet()
+        self.dash_cash_flow = DashCashFlow()
 
         self.not_display = {}, {"display": "none"}
         self.display = {"display": "block"}
@@ -186,29 +189,44 @@ class RegisterCallbacks:
                     return self.not_display
             return self.not_display
 
-    def register_fundamental(self):
+    def register_fundamental_balance_sheet(self):
         @callback(
             Output(self.dash_balance_sheet.id_balance_sheet_graph, "figure"),
             Output(self.dash_balance_sheet.id_layout, "style"),
-            Input("activate-search", "data"),
-            State("search-stock", "value"),
+            Input(FUNDAMENTAL_DATA_CACHE_ID, "data"),
             prevent_initial_call=True,
         )
-        def plot_fundamental(_, search_stock):
-            if search_stock:
-                try:
-                    logger.debug("Fetch financial statement")
-                    data = asyncio.run(
-                        self.financial_statement.fetch_financial_statement(search_stock)
-                    )
-                    if data is not None:
-                        validated_fs = self.financial_statement.model_validate(data)
-                        if validated_fs.balance_sheet:
-                            return (
-                                validated_fs.show_balance_sheet(),
-                                self.display,
-                            )
-                except Exception as e:
-                    logger.error(f"Error fetching financial statement: {e}")
-                    return self.not_display
+        def plot_fundamental_balance_sheet(data):
+            try:
+                if data is not None:
+                    validated_fs = self.financial_statement.model_validate(data)
+                    if validated_fs.balance_sheet:
+                        return (
+                            validated_fs.show_balance_sheet(),
+                            self.display,
+                        )
+            except Exception as e:
+                logger.error(f"Error showing balance sheet: {e}")
+                return self.not_display
+            return self.not_display
+
+    def register_fundamental_cash_flow(self):
+        @callback(
+            Output(self.dash_cash_flow.id_cash_flow_graph, "figure"),
+            Output(self.dash_cash_flow.id_layout, "style"),
+            Input(FUNDAMENTAL_DATA_CACHE_ID, "data"),
+            prevent_initial_call=True,
+        )
+        def plot_fundamental_cash_flow(data):
+            try:
+                if data is not None:
+                    validated_fs = self.financial_statement.model_validate(data)
+                    if validated_fs.cash_flow:
+                        return (
+                            validated_fs.show_cash_flow(),
+                            self.display,
+                        )
+            except Exception as e:
+                logger.error(f"Error showing cash flow: {e}")
+                return self.not_display
             return self.not_display

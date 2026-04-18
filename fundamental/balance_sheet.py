@@ -1,14 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class FinancialFacts(BaseModel):
-    accn: str = ""
-    start_date: str = ""
-    end_date: str = ""
-    filed_date: str = ""
-    fiscal_period: str = ""
-    form_report: str = ""
-    frame: str = ""
+from .common import FinancialFacts
+
 
 class BalanceSheet(BaseModel):
     current_assets: int = 0

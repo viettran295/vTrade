@@ -4,6 +4,12 @@ import dash_bootstrap_components as dbc
 import utils
 from dash_components import RegisterCallbacks
 from dotenv import load_dotenv
+import asyncio
+from loguru import logger
+
+from fundamental import FinancialStatement
+from common import FUNDAMENTAL_DATA_CACHE_ID
+from utils.comm_interface import HttpComm
 
 load_dotenv()
 
@@ -115,6 +121,7 @@ app.layout = dbc.Container(
             style={"display": "flex"},
         ),
         dcc.Store(id="activate-search"),
+        dcc.Store(id=FUNDAMENTAL_DATA_CACHE_ID)
     ],
     fluid=True,
 )
@@ -130,6 +137,25 @@ def update_stock_data(_, search_stock):
         return search_stock
     return dash.no_update
 
+@callback(
+    Output(FUNDAMENTAL_DATA_CACHE_ID, "data"),
+    Input("activate-search", "data"),
+    State("search-stock", "value"),
+        prevent_initial_call=True,
+)
+def fetch_fundamental_data(_, search_stock):
+    if search_stock:
+        try:
+            logger.debug("Fetch financial statement")
+            fs = FinancialStatement()
+            fs._data_fetcher = HttpComm
+            data = asyncio.run(
+                fs.fetch_financial_statement(search_stock)
+            )
+            return data
+        except Exception as e:
+            logger.error(f"Error fetching financial statement: {e}")
+            return None
 
 rc.register_MA_plot_callbacks()
 rc.register_RSI_plot_callback()
@@ -137,7 +163,8 @@ rc.register_BB_plot_callback()
 rc.register_best_performance_MA()
 rc.register_best_performance_RSI()
 rc.register_best_performance_BB()
-rc.register_fundamental()
+rc.register_fundamental_balance_sheet()
+rc.register_fundamental_cash_flow()
 
 if __name__ == "__main__":
     app.run(debug=True)
