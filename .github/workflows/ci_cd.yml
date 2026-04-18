@@ -32,7 +32,6 @@ jobs:
 
     - name: Run tests
       run: uv run pytest tests --html=report.html \
-                                --self-contained-html \
                                 --screenshot=only-on-failure
 
     - name: Upload Test Results
