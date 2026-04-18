@@ -31,8 +31,11 @@ jobs:
         uv run playwright install --with-deps
 
     - name: Run tests
-      run: uv run pytest tests --html=report.html \
-                                --screenshot=only-on-failure
+      run: >
+        uv run pytest tests 
+        --html=report.html
+        --self-contained-html
+        --screenshot=only-on-failure
 
     - name: Upload Test Results
       if: always()
