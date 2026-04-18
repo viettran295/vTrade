@@ -30,20 +30,17 @@ jobs:
         uv sync --locked --all-extras --dev
         uv run playwright install --with-deps
 
-    - name: Pull Docker backend images
-      run: |
-        docker pull viettrann/fundamental:latest
-        docker pull viettrann/str-proc:x86_64
-
     - name: Run tests
-      run: uv run pytest tests --browser chromium
+      run: uv run pytest tests --html=report.html \
+                                --self-contained-html \
+                                --screenshot=only-on-failure
 
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: e2e-tests-report
-        path: test-results/
+        path: report.html
         retention-days: 10
 
   build-arm64:

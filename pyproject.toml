@@ -62,6 +62,7 @@ dependencies = [
     "pyarrow==19.0.1",
     "pydantic>=2.11.10",
     "pygments==2.20.0",
+    "pytest-html>=4.2.0",
     "pytest-playwright>=0.7.2",
     "python-dateutil==2.9.0.post0",
     "python-dotenv==1.0.1",
