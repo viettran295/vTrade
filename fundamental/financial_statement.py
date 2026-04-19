@@ -25,7 +25,7 @@ class FinancialStatement(BaseModel):
     cash_flow: list[CashFlow] | None = []
     income_statement: list[dict] | None = []
 
-    _url: str = PrivateAttr(default="http://localhost:3000")
+    _url: str = PrivateAttr(default="http://fundamental:3000")
     _data_fetcher: CommunicationInterface = PrivateAttr(default=None)
 
     async def fetch_financial_statement(self, stock: str):

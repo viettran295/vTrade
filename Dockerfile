@@ -6,10 +6,11 @@ RUN groupadd -g 1001 appgroup && \
 USER appuser
 
 WORKDIR /app
-COPY --chown=appuser:appgroup . .
-
+COPY pyproject.toml .
+COPY uv.lock .
 RUN uv python install 3.13 && \
     uv sync --locked --no-cache
 
+COPY --chown=appuser:appgroup . .
 EXPOSE 8050
 CMD ["/app/.venv/bin/gunicorn", "--workers=2" ,"--threads=4", "--bind", "0.0.0.0:8050", "app:server"]

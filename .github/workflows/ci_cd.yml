@@ -66,7 +66,6 @@ jobs:
       with:
         context: .
         file: ./Dockerfile
-        platform: linux/arm64/v8
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/vtrade:arm64
 
@@ -112,11 +111,18 @@ jobs:
           VPS_ARCH=$(uname -m)
           CONTAINER_NAME="vtrade"
           ARM64_IMG="${{ secrets.DOCKER_USERNAME }}/vtrade:arm64"
+          NETWORK="vtrade-network"
+          docker network inspect $NETWORK >/dev/null 2>&1 || \
+          docker network create $NETWORK
           if [ "$VPS_ARCH" == "aarch64" ]; then
             docker pull $ARM64_IMG
             docker stop $CONTAINER_NAME
             docker rm $CONTAINER_NAME
-            docker run -d --name $CONTAINER_NAME -p 8050:8050 --network='host' $ARM64_IMG
+            docker run -d \
+                    --name $CONTAINER_NAME \
+                    --network $NETWORK \
+                    -p 8050:8050 \
+                    $ARM64_IMG
           else
             echo "Unsupported architecture: $VPS_ARCH"
             exit 1

@@ -7,7 +7,7 @@ from utils.comm_interface import CommunicationInterface
 
 class Strategy(ABC):
     def __init__(self, data_fetcher: CommunicationInterface) -> None:
-        self.url = "http://localhost:8000"
+        self.url = "http://strategy-processor:8000"
         self.columns = ["datetime", "high", "low", "open", "close"]
         self.signal = "signal"
         self.bin_signal = {"buy": 1, "sell": 0}

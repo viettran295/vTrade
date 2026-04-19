@@ -824,7 +824,7 @@ requires-dist = [
     { name = "dash", specifier = "==4.1.0" },
     { name = "dash-bootstrap-components", specifier = "==1.7.1" },
     { name = "dotenv", specifier = "==0.9.9" },
-    { name = "gunicorn", specifier = ">=23.0.0" },
+    { name = "gunicorn", specifier = ">=25.3.0" },
     { name = "loguru", specifier = "==0.7.3" },
     { name = "numpy", specifier = "==2.2.3" },
     { name = "plotly", specifier = "==6.0.0" },
