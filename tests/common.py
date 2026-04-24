@@ -4,7 +4,7 @@ import subprocess
 import os
 import docker
 from testcontainers.core.container import DockerContainer
-from testcontainers.core.waiting_utils import wait_for_logs
+from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 
 def ensure_docker_img_exists(img: str):
     """
@@ -25,17 +25,17 @@ def app_url():
     fundamental = (
         DockerContainer(fundamental_img)
         .with_exposed_ports(3000)
+        .waiting_for(LogMessageWaitStrategy(""))
     )
     strategy_processor = (
         DockerContainer(strategy_processor_img)
         .with_env("TWEL_DATA_KEY", "fd3519d848474c4b9c5d6ee34e2b078f")
         .with_exposed_ports(8000)
+        .waiting_for(LogMessageWaitStrategy(""))
     )
     with fundamental, strategy_processor:
         # Get dynamic testing containers port
-        wait_for_logs(fundamental, "", timeout=10)
         f_port = fundamental.get_exposed_port(3000)
-        wait_for_logs(strategy_processor, "", timeout=10)
         s_port = strategy_processor.get_exposed_port(8000)
         # Assign testing containers port to env variable url
         env = {
