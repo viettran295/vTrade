@@ -1,13 +1,14 @@
 import polars as pl
 import plotly.graph_objects as go
 from abc import ABC, abstractmethod
+import os
 
 from utils.comm_interface import CommunicationInterface
 
 
 class Strategy(ABC):
     def __init__(self, data_fetcher: CommunicationInterface) -> None:
-        self.url = "http://strategy-processor:8000"
+        self.url = os.getenv("STRATEGY_PROCESSOR_URL", "http://strategy-processor:8000")
         self.columns = ["datetime", "high", "low", "open", "close"]
         self.signal = "signal"
         self.bin_signal = {"buy": 1, "sell": 0}
@@ -18,6 +19,7 @@ class Strategy(ABC):
         return
 
     def show_stock_price(self, df: pl.DataFrame) -> go.Figure:
+        print(self.url)
         fig = go.Figure()
         fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
 

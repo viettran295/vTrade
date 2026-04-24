@@ -18,7 +18,7 @@ class DataFetch:
     def __init__(self) -> None:
         self.end_date = date.today() - timedelta(days=1)
         self.start_date = self.end_date - timedelta(days=365 * 3)
-        self.api_key = os.getenv("12_DATA_KEY")
+        self.api_key = os.getenv("TWEL_DATA_KEY")
         self.coincap_key = os.getenv("COINCAP_KEY")
 
     async def get_stocks_async(self, stock) -> dict:

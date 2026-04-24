@@ -2,6 +2,7 @@ from pydantic import BaseModel, PrivateAttr
 from enum import Enum
 import plotly.graph_objects as go
 import numpy as np
+import os
 
 from .balance_sheet import BalanceSheet
 from .cash_flow import CashFlow
@@ -25,7 +26,7 @@ class FinancialStatement(BaseModel):
     cash_flow: list[CashFlow] | None = []
     income_statement: list[dict] | None = []
 
-    _url: str = PrivateAttr(default="http://fundamental:3000")
+    _url: str = PrivateAttr(default= os.getenv("FUNDAMENTAL_URL", "http://fundamental:3000"))
     _data_fetcher: CommunicationInterface = PrivateAttr(default=None)
 
     async def fetch_financial_statement(self, stock: str):

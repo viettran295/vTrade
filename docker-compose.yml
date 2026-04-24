@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   vtrade:
-    build: .
+    image: viettrann/vtrade:x86_64
     ports:
       - 8050:8050
     depends_on:
@@ -9,7 +9,9 @@ services:
       - fundamental
 
   strategy-processor:
-    image: viettrann/str-proc:x86_64
+    image: viettrann/strategy-processor:x86_64
+    environment:
+      - TWEL_DATA_KEY=${TWEL_DATA_KEY}
     ports:
       - 8000:8000
   
