@@ -19,7 +19,6 @@ class Strategy(ABC):
         return
 
     def show_stock_price(self, df: pl.DataFrame) -> go.Figure:
-        print(self.url)
         fig = go.Figure()
         fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
 

@@ -6,25 +6,17 @@ import os
 
 from .balance_sheet import BalanceSheet
 from .cash_flow import CashFlow
+from .income_statement import IncomeStatement
 from utils.comm_interface import *
-
 
 class Period(Enum):
     ANNUALLY = "annually"
     QUARLY = "quarly"
 
-# class IncomeStatement(BaseModel):
-#     cost_and_expenses: int
-#     cost_of_revenue: int
-#     operating_expense: int
-#     operating_income: int
-#     total_revenue: int
-#     financial_facts: FinancialFacts
-
 class FinancialStatement(BaseModel):
     balance_sheet: list[BalanceSheet] | None = []
     cash_flow: list[CashFlow] | None = []
-    income_statement: list[dict] | None = []
+    income_statement: list[IncomeStatement] | None = []
 
     _url: str = PrivateAttr(default= os.getenv("FUNDAMENTAL_URL", "http://fundamental:3000"))
     _data_fetcher: CommunicationInterface = PrivateAttr(default=None)
@@ -110,6 +102,65 @@ class FinancialStatement(BaseModel):
             # 'relative' stacks positive values above 0 and negative below 0
             barmode="relative",
             title_text="Balance Sheet",
+            yaxis_title="USD",
+            bargroupgap=0.1,
+            xaxis=dict(
+                type="category",  # Treats the date as a label rather than a timeline
+                tickformat="%Y-%m-%d",
+            ),
+        )
+        return fig
+
+    def show_income_statement(self) -> go.Figure | None:
+        if len(self.income_statement) == 0:
+            return None
+
+        dates = [item.financial_facts.end_date for item in self.income_statement]
+        cost_of_revenues = [item.cost_of_revenue for item in self.income_statement]
+        operating_expenses = [item.operating_expense for item in self.income_statement]
+        total_revenue = [item.total_revenue for item in self.income_statement]
+
+        hover_template = "%{y:$,.2f}"
+        fig = go.Figure()
+
+        fig.add_trace(
+            go.Bar(
+                x=dates,
+                y=cost_of_revenues,
+                marker_color="#f1ba8b",
+                hovertemplate=hover_template,
+                name="Cost of Revenue",
+                offsetgroup=0,
+            )
+        )
+        fig.add_trace(
+            go.Bar(
+                x=dates,
+                y=operating_expenses,
+                marker_color="#88ace2",
+                hovertemplate=hover_template,
+                name="Operating Expenses",
+                offsetgroup=0,
+                base=cost_of_revenues,
+            )
+        )
+        # --- Total revenue ---
+        fig.add_trace(
+            go.Bar(
+                x=dates,
+                y=total_revenue,
+                marker_color="#c084fc",
+                hovertemplate=hover_template,
+                name="Total Revenue",
+                offsetgroup=1,
+            )
+        )
+        fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
+        fig.update_layout(
+            template="plotly_dark",
+            # 'relative' stacks positive values above 0 and negative below 0
+            barmode="relative",
+            title_text="Income Statement",
             yaxis_title="USD",
             bargroupgap=0.1,
             xaxis=dict(

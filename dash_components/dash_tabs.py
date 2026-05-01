@@ -6,6 +6,7 @@ from .dash_bb import DashBollingerBands
 
 from .dash_balance_sheet import DashBalanceSheet
 from .dash_cash_flow import DashCashFlow
+from .dash_income_statement import DashIncomeStatement
 
 
 class DashTabs:
@@ -20,6 +21,7 @@ class DashTabs:
 
         self.balance_sheet = DashBalanceSheet()
         self.cash_flow = DashCashFlow()
+        self.income_statement = DashIncomeStatement()
 
     def layout(self):
         # Common styles for both tabs
@@ -62,7 +64,9 @@ class DashTabs:
                         html.Br(),
                         self.balance_sheet.layout(),
                         html.Br(),
-                        self.cash_flow.layout()
+                        self.cash_flow.layout(),
+                        html.Br(),
+                        self.income_statement.layout()
                     ],
                     selected_style=tab_selected_style,
                     style=tab_style
