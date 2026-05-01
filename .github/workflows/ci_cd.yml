@@ -13,6 +13,8 @@ jobs:
       contents: read
     env:
       TWEL_DATA_KEY: ${{ secrets.TWEL_DATA_KEY }}
+      DOCKER_HOST: unix:///var/run/docker.sock
+      TESTCONTAINERS_RYUK_DISABLED: "true" # Disable cleanup container
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
