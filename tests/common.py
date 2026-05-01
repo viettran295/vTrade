@@ -36,25 +36,26 @@ def app_url():
         .with_exposed_ports(8000)
         .waiting_for(LogMessageWaitStrategy(""))
     )
-    with fundamental, strategy_processor:
-        # Get dynamic testing containers port
-        f_port = fundamental.get_exposed_port(3000)
-        s_port = strategy_processor.get_exposed_port(8000)
-        # Assign testing containers port to env variable url
-        env = {
-            **os.environ,
-            "FUNDAMENTAL_URL": f"http://localhost:{f_port}",
-            "STRATEGY_PROCESSOR_URL": f"http://localhost:{s_port}",
-        }
-        process = subprocess.Popen(
-            ["python", "app.py"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=env,
-        )
-        host = "localhost"
-        port = "8050"
-        time.sleep(5)
-        yield f"http://{host}:{port}"
-        process.terminate()
-        process.wait()
+    fundamental.start()
+    strategy_processor.start()
+    # Get dynamic testing containers port
+    f_port = fundamental.get_exposed_port(3000)
+    s_port = strategy_processor.get_exposed_port(8000)
+    # Assign testing containers port to env variable url
+    env = {
+        **os.environ,
+        "FUNDAMENTAL_URL": f"http://localhost:{f_port}",
+        "STRATEGY_PROCESSOR_URL": f"http://localhost:{s_port}",
+    }
+    process = subprocess.Popen(
+        ["python", "app.py"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env,
+    )
+    host = "localhost"
+    port = "8050"
+    time.sleep(5)
+    yield f"http://{host}:{port}"
+    process.terminate()
+    process.wait()
