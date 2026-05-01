@@ -43,6 +43,9 @@ jobs:
     - name: Run tests
       run: >
         uv run pytest tests 
+        --reruns 3
+        --reruns-delay 5
+        -rR
         --html=report.html
         --self-contained-html
         --screenshot=only-on-failure
