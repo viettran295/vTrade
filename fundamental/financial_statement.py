@@ -9,16 +9,20 @@ from .cash_flow import CashFlow
 from .income_statement import IncomeStatement
 from utils.comm_interface import *
 
+
 class Period(Enum):
     ANNUALLY = "annually"
     QUARLY = "quarly"
+
 
 class FinancialStatement(BaseModel):
     balance_sheet: list[BalanceSheet] | None = []
     cash_flow: list[CashFlow] | None = []
     income_statement: list[IncomeStatement] | None = []
 
-    _url: str = PrivateAttr(default= os.getenv("FUNDAMENTAL_URL", "http://fundamental:3000"))
+    _url: str = PrivateAttr(
+        default=os.getenv("FUNDAMENTAL_URL", "http://fundamental:3000")
+    )
     _data_fetcher: CommunicationInterface = PrivateAttr(default=None)
 
     async def fetch_financial_statement(self, stock: str):
@@ -63,7 +67,7 @@ class FinancialStatement(BaseModel):
                 hovertemplate=hover_template,
                 name="Inventory",
                 offsetgroup=0,
-                base=assets
+                base=assets,
             ),
         )
         fig.add_trace(
@@ -74,7 +78,7 @@ class FinancialStatement(BaseModel):
                 hovertemplate=hover_template,
                 name="Current liabilities",
                 offsetgroup=0,
-                base=assets_plus_inventory
+                base=assets_plus_inventory,
             ),
         )
         fig.add_trace(
@@ -84,7 +88,7 @@ class FinancialStatement(BaseModel):
                 marker_color="#99ef8f",
                 hovertemplate=hover_template,
                 name="Total assets",
-                offsetgroup=1
+                offsetgroup=1,
             ),
         )
         fig.add_trace(
@@ -94,7 +98,7 @@ class FinancialStatement(BaseModel):
                 marker_color="#f1ba8b",
                 hovertemplate=hover_template,
                 name="Total liabilities",
-                offsetgroup=1
+                offsetgroup=1,
             ),
         )
         fig.update_layout(
@@ -188,7 +192,7 @@ class FinancialStatement(BaseModel):
                 x=dates,
                 y=end_cash_flow,
                 marker_color="#99ef8f",
-                mode="lines+markers", # Ensure markers are visible
+                mode="lines+markers",  # Ensure markers are visible
                 marker=dict(
                     size=self._scale_sizes(end_cash_flow),
                     sizemode="diameter",
@@ -260,6 +264,9 @@ class FinancialStatement(BaseModel):
         if abs_vals.max() == abs_vals.min():
             return [min_size] * len(nums)
         return [
-            min_size + (v - abs_vals.min()) / (abs_vals.max() - abs_vals.min()) * (max_size - min_size)
+            min_size
+            + (v - abs_vals.min())
+            / (abs_vals.max() - abs_vals.min())
+            * (max_size - min_size)
             for v in abs_vals
         ]

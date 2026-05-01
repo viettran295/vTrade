@@ -1,5 +1,6 @@
 from dash import html, dcc
 
+
 class DashBalanceSheet:
     def __init__(self):
         self.id_layout = "balance-sheet-layout"

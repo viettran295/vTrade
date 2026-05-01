@@ -1,5 +1,6 @@
 from dash import html, dcc
 
+
 class DashCashFlow:
     def __init__(self):
         self.id_layout = "cash-flow-layout"
@@ -9,4 +10,3 @@ class DashCashFlow:
         return html.Div(
             id=self.id_layout, children=[dcc.Graph(id=self.id_cash_flow_graph)]
         )
-

@@ -3,6 +3,7 @@ from typing import Optional
 
 from .common import FinancialFacts
 
+
 class CashFlow(BaseModel):
     end_cash_flow_position: int = 0
     financing_cash_flow: int = 0

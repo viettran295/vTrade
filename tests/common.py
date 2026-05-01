@@ -6,6 +6,7 @@ import docker
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 
+
 def ensure_docker_img_exists(img: str):
     """
     Pull docker image if not exists
@@ -15,6 +16,7 @@ def ensure_docker_img_exists(img: str):
         client.images.get(img)
     except Exception:
         client.images.pull(img)
+
 
 @pytest.fixture(scope="session")
 def app_url():
@@ -45,10 +47,10 @@ def app_url():
             "STRATEGY_PROCESSOR_URL": f"http://localhost:{s_port}",
         }
         process = subprocess.Popen(
-            ["python", "app.py"],  
+            ["python", "app.py"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            env=env
+            env=env,
         )
         host = "localhost"
         port = "8050"
