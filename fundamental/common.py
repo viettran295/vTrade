@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class FinancialFacts(BaseModel):
     accn: str = ""
     start_date: str = ""

@@ -1,8 +1,8 @@
-
 from pydantic import BaseModel
 from typing import Optional
 
 from .common import FinancialFacts
+
 
 class IncomeStatement(BaseModel):
     cost_and_expense: int = 0

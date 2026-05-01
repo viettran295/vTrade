@@ -2,6 +2,7 @@ from playwright.sync_api import expect
 
 from .common import *
 
+
 def test_crossing_ma_graph(page, app_url):
     """
     Test end to end Crossing MA graph
@@ -27,6 +28,7 @@ def test_crossing_ma_graph(page, app_url):
     expect(page.locator("rect").nth(4)).to_be_visible()
     expect(page.locator(".bg")).to_be_visible()
 
+
 def test_bollingerbands_graph(page, app_url):
     """
     Test end to end Bollinger bands graph
@@ -44,7 +46,12 @@ def test_bollingerbands_graph(page, app_url):
     bb_graph = page.locator("#bb-graph")
     expect(bb_graph).to_be_visible()
     bb_graph.scroll_into_view_if_needed()
-    expect(page.locator("#bb-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag")).to_be_visible()
+    expect(
+        page.locator(
+            "#bb-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag"
+        )
+    ).to_be_visible()
+
 
 def test_rsi_graph(page, app_url):
     """
@@ -63,4 +70,8 @@ def test_rsi_graph(page, app_url):
     rsi_graph = page.locator("#rsi-graph")
     expect(rsi_graph).to_be_visible()
     rsi_graph.scroll_into_view_if_needed()
-    expect(page.locator("#rsi-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag")).to_be_visible()
+    expect(
+        page.locator(
+            "#rsi-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag"
+        )
+    ).to_be_visible()

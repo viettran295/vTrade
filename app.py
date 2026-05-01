@@ -114,14 +114,14 @@ app.layout = dbc.Container(
                         "maxHeight": "900px",  # Set a max height
                         "overflowY": "auto",  # Enable vertical scrolling when needed
                     },
-                    width=10
+                    width=10,
                 ),
             ],
             className="gx-0",
             style={"display": "flex"},
         ),
         dcc.Store(id="activate-search"),
-        dcc.Store(id=FUNDAMENTAL_DATA_CACHE_ID)
+        dcc.Store(id=FUNDAMENTAL_DATA_CACHE_ID),
     ],
     fluid=True,
 )
@@ -137,11 +137,12 @@ def update_stock_data(_, search_stock):
         return search_stock
     return dash.no_update
 
+
 @callback(
     Output(FUNDAMENTAL_DATA_CACHE_ID, "data"),
     Input("activate-search", "data"),
     State("search-stock", "value"),
-        prevent_initial_call=True,
+    prevent_initial_call=True,
 )
 def fetch_fundamental_data(_, search_stock):
     if search_stock:
@@ -149,13 +150,12 @@ def fetch_fundamental_data(_, search_stock):
             logger.debug("Fetch financial statement")
             fs = FinancialStatement()
             fs._data_fetcher = HttpComm
-            data = asyncio.run(
-                fs.fetch_financial_statement(search_stock)
-            )
+            data = asyncio.run(fs.fetch_financial_statement(search_stock))
             return data
         except Exception as e:
             logger.error(f"Error fetching financial statement: {e}")
             return None
+
 
 rc.register_MA_plot_callbacks()
 rc.register_RSI_plot_callback()

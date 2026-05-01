@@ -30,13 +30,13 @@ class DashTabs:
             "backgroundColor": "#222",  # Matching your Darkly theme
             "color": "white",
             "borderTopLeftRadius": "15px",  # The Curve
-            "borderTopRightRadius": "15px", # The Curve
+            "borderTopRightRadius": "15px",  # The Curve
             "border": "1px solid #444",
-            "marginRight": "10px", # Gap between tabs
+            "marginRight": "10px",  # Gap between tabs
         }
         tab_selected_style = {
             **tab_style,
-            "borderTop": "3px solid #198754", # Green accent line
+            "borderTop": "3px solid #198754",  # Green accent line
             "fontStyle": "italic",
         }
         return dcc.Tabs(
@@ -55,7 +55,7 @@ class DashTabs:
                         html.Br(),
                     ],
                     selected_style=tab_selected_style,
-                    style=tab_style
+                    style=tab_style,
                 ),
                 dcc.Tab(
                     id=self.fundamental_analysis_id,
@@ -66,10 +66,10 @@ class DashTabs:
                         html.Br(),
                         self.cash_flow.layout(),
                         html.Br(),
-                        self.income_statement.layout()
+                        self.income_statement.layout(),
                     ],
                     selected_style=tab_selected_style,
-                    style=tab_style
+                    style=tab_style,
                 ),
             ],
         )
