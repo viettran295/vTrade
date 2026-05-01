@@ -18,7 +18,8 @@ def ensure_docker_img_exists(img: str):
 
 @pytest.fixture(scope="session")
 def app_url():
-    fundamental_img = "viettrann/fundamental:latest"
+    twel_key = os.environ.get("TWEL_DATA_KEY")
+    fundamental_img = "viettrann/fundamental:x86_64"
     strategy_processor_img = "viettrann/strategy-processor:x86_64"
     ensure_docker_img_exists(fundamental_img)
     ensure_docker_img_exists(strategy_processor_img)
@@ -29,7 +30,7 @@ def app_url():
     )
     strategy_processor = (
         DockerContainer(strategy_processor_img)
-        .with_env("TWEL_DATA_KEY", "fd3519d848474c4b9c5d6ee34e2b078f")
+        .with_env("TWEL_DATA_KEY", twel_key)
         .with_exposed_ports(8000)
         .waiting_for(LogMessageWaitStrategy(""))
     )
