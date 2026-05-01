@@ -36,3 +36,18 @@ def test_fundamental_cash_flow_graph(page, app_url):
     expect(cash_flow_graph).to_be_visible()
     cash_flow_graph.scroll_into_view_if_needed()
     expect(page.locator("#cash-flow-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag")).to_be_visible()
+
+def test_fundamental_income_statement_graph(page, app_url):
+    page.goto(app_url)
+    page.reload()
+    # Click to find stock info
+    page.get_by_role("textbox", name="Stock symbol").click()
+    page.get_by_role("textbox", name="Stock symbol").fill("AMD")
+    page.get_by_role("button", name="Search").click()
+    # Click Fundamental tab and verify the graph exists
+    page.locator("#fa-id").click()
+    expect(page.locator("#fa-id")).to_be_visible()
+    expect(page.get_by_text("Fundamental Analysis")).to_be_visible()
+    page.get_by_role("button", name="Search").click()
+    page.locator("#fa-id").click()
+    expect(page.locator("#income-statement-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag")).to_be_visible()
