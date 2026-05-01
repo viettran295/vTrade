@@ -31,6 +31,8 @@ jobs:
       run: |
         uv sync --locked --all-extras --dev
         uv run playwright install --with-deps
+        docker pull viettrann/fundamental:x86_64
+        docker pull viettrann/strategy-processor:x86_64
 
     - name: Run tests
       run: >
