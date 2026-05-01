@@ -33,6 +33,10 @@ jobs:
       run: |
         uv sync --locked --all-extras --dev
         uv run playwright install --with-deps
+
+    - name: Verify Docker is ready
+      run: |
+        docker info
         docker pull viettrann/fundamental:x86_64
         docker pull viettrann/strategy-processor:x86_64
 
