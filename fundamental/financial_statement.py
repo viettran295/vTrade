@@ -10,6 +10,17 @@ from .income_statement import IncomeStatement
 from utils.comm_interface import *
 
 
+PASTEL = {
+    "mint": "#A8E6CF",  # Assets / Positive
+    "blue": "#8EE0ED",  # Inventory / Secondary Assets
+    "peach": "#FFD8BE",  # Liabilities / Costs
+    "rose": "#FFB7B2",  # Expenses / Investing
+    "lavender": "#D4B5FF",  # Revenue / Totals
+    "yellow": "#FFF5BA",  # Operating Cash Flow
+    "cyan": "#B2F7EF",  # Financing Cash Flow
+}
+
+
 class Period(Enum):
     ANNUALLY = "annually"
     QUARLY = "quarly"
@@ -53,7 +64,7 @@ class FinancialStatement(BaseModel):
             go.Bar(
                 x=dates,
                 y=assets,
-                marker_color="#99ef8f",
+                marker_color=PASTEL["mint"],
                 hovertemplate=hover_template,
                 name="Current assets",
                 offsetgroup=0,
@@ -63,7 +74,7 @@ class FinancialStatement(BaseModel):
             go.Bar(
                 x=dates,
                 y=inventory,
-                marker_color="#88ace2",
+                marker_color=PASTEL["blue"],
                 hovertemplate=hover_template,
                 name="Inventory",
                 offsetgroup=0,
@@ -74,7 +85,7 @@ class FinancialStatement(BaseModel):
             go.Bar(
                 x=dates,
                 y=liabilities,
-                marker_color="#f1ba8b",
+                marker_color=PASTEL["peach"],
                 hovertemplate=hover_template,
                 name="Current liabilities",
                 offsetgroup=0,
@@ -85,7 +96,7 @@ class FinancialStatement(BaseModel):
             go.Bar(
                 x=dates,
                 y=total_assets,
-                marker_color="#99ef8f",
+                marker_color=PASTEL["mint"],
                 hovertemplate=hover_template,
                 name="Total assets",
                 offsetgroup=1,
@@ -95,7 +106,7 @@ class FinancialStatement(BaseModel):
             go.Bar(
                 x=dates,
                 y=total_liabilities,
-                marker_color="#f1ba8b",
+                marker_color=PASTEL["peach"],
                 hovertemplate=hover_template,
                 name="Total liabilities",
                 offsetgroup=1,
@@ -131,7 +142,7 @@ class FinancialStatement(BaseModel):
             go.Bar(
                 x=dates,
                 y=cost_of_revenues,
-                marker_color="#f1ba8b",
+                marker_color=PASTEL["peach"],
                 hovertemplate=hover_template,
                 name="Cost of Revenue",
                 offsetgroup=0,
@@ -141,7 +152,7 @@ class FinancialStatement(BaseModel):
             go.Bar(
                 x=dates,
                 y=operating_expenses,
-                marker_color="#88ace2",
+                marker_color=PASTEL["rose"],
                 hovertemplate=hover_template,
                 name="Operating Expenses",
                 offsetgroup=0,
@@ -153,7 +164,7 @@ class FinancialStatement(BaseModel):
             go.Bar(
                 x=dates,
                 y=total_revenue,
-                marker_color="#c084fc",
+                marker_color=PASTEL["lavender"],
                 hovertemplate=hover_template,
                 name="Total Revenue",
                 offsetgroup=1,
@@ -191,7 +202,7 @@ class FinancialStatement(BaseModel):
             go.Scatter(
                 x=dates,
                 y=end_cash_flow,
-                marker_color="#99ef8f",
+                marker_color=PASTEL["mint"],
                 mode="lines+markers",  # Ensure markers are visible
                 marker=dict(
                     size=self._scale_sizes(end_cash_flow),
@@ -206,7 +217,7 @@ class FinancialStatement(BaseModel):
             go.Scatter(
                 x=dates,
                 y=financing_cash_flow,
-                marker_color="#8fefed",
+                marker_color=PASTEL["yellow"],
                 marker=dict(
                     size=self._scale_sizes(financing_cash_flow),
                     sizemode="diameter",
@@ -225,7 +236,7 @@ class FinancialStatement(BaseModel):
                     sizemode="diameter",
                     line=dict(width=1, color="white"),
                 ),
-                marker_color="#e676b9",
+                marker_color=PASTEL["cyan"],
                 hovertemplate=hover_template,
                 name="Investing cash flow",
             )
@@ -234,7 +245,7 @@ class FinancialStatement(BaseModel):
             go.Scatter(
                 x=dates,
                 y=operating_cash_flow,
-                marker_color="#ecda84",
+                marker_color=PASTEL["rose"],
                 marker=dict(
                     size=self._scale_sizes(financing_cash_flow),
                     sizemode="diameter",
