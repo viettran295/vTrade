@@ -147,13 +147,26 @@ def update_stock_data(_, search_stock):
 def fetch_fundamental_data(_, search_stock):
     if search_stock:
         try:
-            logger.debug("Fetch financial statement")
+            logger.debug("Fetch financial statement and industry ratios")
             fs = FinancialStatement()
             fs._data_fetcher = HttpComm
-            data = asyncio.run(fs.fetch_financial_statement(search_stock))
-            return data
+
+            async def _fetch_all():
+                history_coro = fs.fetch_financial_statement(search_stock)
+                ratios_coro = fs.fetch_industry_ratios(search_stock)
+                return await asyncio.gather(history_coro, ratios_coro, return_exceptions=True)
+
+            history_data, ratios_data = asyncio.run(_fetch_all())
+
+            payload = {}
+            if isinstance(history_data, dict):
+                payload.update(history_data)
+            if isinstance(ratios_data, dict):
+                payload["industry_ratios"] = ratios_data
+
+            return payload if payload else None
         except Exception as e:
-            logger.error(f"Error fetching financial statement: {e}")
+            logger.error(f"Error fetching fundamental data: {e}")
             return None
 
 
@@ -166,6 +179,7 @@ rc.register_best_performance_BB()
 rc.register_fundamental_balance_sheet()
 rc.register_fundamental_cash_flow()
 rc.register_fundamental_income_statement()
+rc.register_fundamental_ratios()
 
 if __name__ == "__main__":
     app.run(debug=True)

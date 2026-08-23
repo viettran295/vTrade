@@ -14,6 +14,7 @@ from .dash_tabs import DashTabs
 from .dash_balance_sheet import DashBalanceSheet
 from .dash_cash_flow import DashCashFlow
 from .dash_income_statement import DashIncomeStatement
+from .dash_ratios import DashFinancialRatios
 
 
 class RegisterCallbacks:
@@ -24,6 +25,7 @@ class RegisterCallbacks:
         self.dash_balance_sheet = DashBalanceSheet()
         self.dash_cash_flow = DashCashFlow()
         self.dash_income_statement = DashIncomeStatement()
+        self.dash_financial_ratios = DashFinancialRatios()
         self.checklist = DashChecklist()
         self.tabs = DashTabs()
 
@@ -252,3 +254,27 @@ class RegisterCallbacks:
                 logger.error(f"Error showing income statement: {e}")
                 return self.not_display
             return self.not_display
+
+    def register_fundamental_ratios(self):
+        @callback(
+            Output(self.dash_financial_ratios.id_financial_ratios_graph, "figure"),
+            Output(self.dash_financial_ratios.id_layout, "style"),
+            Input(FUNDAMENTAL_DATA_CACHE_ID, "data"),
+            prevent_initial_call=True,
+        )
+        def plot_fundamental_ratios(data):
+            try:
+                if data is not None:
+                    validated_fs = self.financial_statement.model_validate(data)
+                    if validated_fs.balance_sheet or validated_fs.income_statement or validated_fs.industry_ratios:
+                        fig = validated_fs.show_financial_ratios()
+                        if fig is not None:
+                            return (
+                                fig,
+                                self.display,
+                            )
+            except Exception as e:
+                logger.error(f"Error showing financial ratios: {e}")
+                return self.not_display
+            return self.not_display
+

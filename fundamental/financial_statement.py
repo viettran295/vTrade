@@ -7,6 +7,7 @@ import os
 from .balance_sheet import BalanceSheet
 from .cash_flow import CashFlow
 from .income_statement import IncomeStatement
+from .ratios import IndustryRatios
 from utils.comm_interface import *
 
 
@@ -18,6 +19,7 @@ PASTEL = {
     "lavender": "#D4B5FF",  # Revenue / Totals
     "yellow": "#FFF5BA",  # Operating Cash Flow
     "cyan": "#B2F7EF",  # Financing Cash Flow
+    "orange": "#FFC09F",  # Industry Benchmark
 }
 
 
@@ -30,14 +32,23 @@ class FinancialStatement(BaseModel):
     balance_sheet: list[BalanceSheet] | None = []
     cash_flow: list[CashFlow] | None = []
     income_statement: list[IncomeStatement] | None = []
+    industry_ratios: IndustryRatios | None = None
 
     _url: str = PrivateAttr(
-        default=os.getenv("FUNDAMENTAL_URL", "http://fundamental:3000")
+        default=os.getenv("FUNDAMENTAL_URL", "http://fundamental:8001")
     )
     _data_fetcher: CommunicationInterface = PrivateAttr(default=None)
 
     async def fetch_financial_statement(self, stock: str):
         endpoint = self._url + "/" + stock + "/" + "history"
+        response = await self._data_fetcher.get(endpoint)
+        if response is not None:
+            return response
+        else:
+            return None
+
+    async def fetch_industry_ratios(self, stock: str):
+        endpoint = self._url + "/" + stock + "/" + "ratios"
         response = await self._data_fetcher.get(endpoint)
         if response is not None:
             return response
@@ -269,6 +280,221 @@ class FinancialStatement(BaseModel):
         )
         return fig
 
+    def show_financial_ratios(self) -> go.Figure | None:
+        if not self.balance_sheet and not self.income_statement and not self.industry_ratios:
+            return None
+
+        # Build dates from balance_sheet (or income_statement if balance_sheet empty)
+        bs_by_date = {
+            item.financial_facts.end_date: item
+            for item in (self.balance_sheet or [])
+            if item.financial_facts and item.financial_facts.end_date
+        }
+        is_by_date = {
+            item.financial_facts.end_date: item
+            for item in (self.income_statement or [])
+            if item.financial_facts and item.financial_facts.end_date
+        }
+
+        all_dates = sorted(list(set(list(bs_by_date.keys()) + list(is_by_date.keys()))), reverse=True)
+        if not all_dates:
+            # Fallback if no dates in statements but industry ratios exist
+            categories = [
+                "Current Ratio",
+                "Quick Ratio",
+                "Debt Ratio",
+                "Equity Ratio",
+                "Gross Margin",
+                "Operating Margin",
+                "Net Margin",
+            ]
+            fig = go.Figure()
+            if self.industry_ratios:
+                ind_vals = [
+                    self.industry_ratios.current_ratio or 0.0,
+                    self.industry_ratios.quick_ratio or 0.0,
+                    self.industry_ratios.debt_ratio or 0.0,
+                    self.industry_ratios.equity_ratio or 0.0,
+                    self.industry_ratios.gross_profit_margin or 0.0,
+                    self.industry_ratios.operating_grofit_margin or 0.0,
+                    self.industry_ratios.net_grofit_margin or 0.0,
+                ]
+                fig.add_trace(
+                    go.Bar(
+                        x=categories,
+                        y=ind_vals,
+                        name="Industry Average",
+                        marker_color=PASTEL["yellow"],
+                    )
+                )
+            fig.update_layout(
+                template="plotly_dark",
+                title_text="Financial Ratios vs Industry Average",
+                barmode="group",
+            )
+            return fig
+
+        # Compute company ratios for each reporting period
+        current_ratios = []
+        quick_ratios = []
+        debt_ratios = []
+        equity_ratios = []
+        gross_margins = []
+        operating_margins = []
+        net_margins = []
+
+        for d in all_dates:
+            bs = bs_by_date.get(d)
+            inc = is_by_date.get(d)
+
+            # Liquidity & Solvency from Balance Sheet
+            cr = (
+                (bs.current_assets / bs.current_liabilities)
+                if (bs and bs.current_liabilities and bs.current_liabilities != 0)
+                else 0.0
+            )
+            qr = (
+                ((bs.current_assets - bs.inventory) / bs.current_liabilities)
+                if (bs and bs.current_liabilities and bs.current_liabilities != 0)
+                else 0.0
+            )
+            dr = (
+                (bs.total_liabilities / bs.total_assets)
+                if (bs and bs.total_assets and bs.total_assets != 0)
+                else 0.0
+            )
+            er = (
+                (bs.total_equity / bs.total_assets)
+                if (bs and bs.total_assets and bs.total_assets != 0)
+                else 0.0
+            )
+
+            # Profitability Margins from Income Statement
+            gpm = 0.0
+            opm = 0.0
+            npm = 0.0
+            if inc and inc.total_revenue and inc.total_revenue != 0:
+                if inc.gross_profit:
+                    gpm = inc.gross_profit / inc.total_revenue
+                elif inc.cost_of_revenue:
+                    gpm = (inc.total_revenue - inc.cost_of_revenue) / inc.total_revenue
+                if inc.operating_income:
+                    opm = inc.operating_income / inc.total_revenue
+                if inc.net_income:
+                    npm = inc.net_income / inc.total_revenue
+
+            current_ratios.append(round(cr, 2))
+            quick_ratios.append(round(qr, 2))
+            debt_ratios.append(round(dr, 2))
+            equity_ratios.append(round(er, 2))
+            gross_margins.append(round(gpm, 2))
+            operating_margins.append(round(opm, 2))
+            net_margins.append(round(npm, 2))
+
+        fig = go.Figure()
+
+        # Company traces (bars or lines per metric across time)
+        fig.add_trace(
+            go.Bar(
+                x=all_dates,
+                y=current_ratios,
+                name="Current Ratio",
+                marker_color=PASTEL["mint"],
+                offsetgroup=0,
+            )
+        )
+        fig.add_trace(
+            go.Bar(
+                x=all_dates,
+                y=quick_ratios,
+                name="Quick Ratio",
+                marker_color=PASTEL["blue"],
+                offsetgroup=1,
+            )
+        )
+        fig.add_trace(
+            go.Bar(
+                x=all_dates,
+                y=debt_ratios,
+                name="Debt Ratio",
+                marker_color=PASTEL["peach"],
+                offsetgroup=2,
+            )
+        )
+        fig.add_trace(
+            go.Bar(
+                x=all_dates,
+                y=equity_ratio if (equity_ratio := equity_ratios) else [],
+                name="Equity Ratio",
+                marker_color=PASTEL["rose"],
+                offsetgroup=3,
+            )
+        )
+
+        # Industry benchmarks as comparison reference lines / points
+        if self.industry_ratios:
+            ind = self.industry_ratios
+            if ind.current_ratio is not None:
+                fig.add_trace(
+                    go.Scatter(
+                        x=all_dates,
+                        y=[round(ind.current_ratio, 2)] * len(all_dates),
+                        name=f"Ind. Avg Current Ratio ({ind.current_ratio:.2f})",
+                        mode="lines",
+                        line=dict(color=PASTEL["mint"], dash="dash", width=1),
+                    )
+                )
+            if ind.quick_ratio is not None:
+                fig.add_trace(
+                    go.Scatter(
+                        x=all_dates,
+                        y=[round(ind.quick_ratio, 2)] * len(all_dates),
+                        name=f"Ind. Avg Quick Ratio ({ind.quick_ratio:.2f})",
+                        mode="lines",
+                        line=dict(color=PASTEL["blue"], dash="dash", width=1),
+                    )
+                )
+            if ind.debt_ratio is not None:
+                fig.add_trace(
+                    go.Scatter(
+                        x=all_dates,
+                        y=[round(ind.debt_ratio, 2)] * len(all_dates),
+                        name=f"Ind. Avg Debt Ratio ({ind.debt_ratio:.2f})",
+                        mode="lines",
+                        line=dict(color=PASTEL["peach"], dash="dash", width=1),
+                    )
+                )
+            if ind.equity_ratio is not None:
+                fig.add_trace(
+                    go.Scatter(
+                        x=all_dates,
+                        y=[round(ind.equity_ratio, 2)] * len(all_dates),
+                        name=f"Ind. Avg Equity Ratio ({ind.equity_ratio:.2f})",
+                        mode="lines",
+                        line=dict(color=PASTEL["rose"], dash="dash", width=1),
+                    )
+                )
+
+        fig.update_layout(
+            template="plotly_dark",
+            title_text="Financial Ratios vs. Industry Average",
+            yaxis_title="Ratio Value",
+            barmode="group",
+            bargroupgap=0.1,
+            xaxis=dict(
+                type="category",
+                tickformat="%Y-%m-%d",
+            ),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.05,
+                xanchor="left",
+                x=0,
+            ),
+        )
+        return fig
+
     @staticmethod
     def _scale_sizes(nums, min_size=8, max_size=40):
         abs_vals = np.abs(nums)
@@ -281,3 +507,4 @@ class FinancialStatement(BaseModel):
             * (max_size - min_size)
             for v in abs_vals
         ]
+
