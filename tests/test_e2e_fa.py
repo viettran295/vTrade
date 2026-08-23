@@ -61,4 +61,28 @@ def test_fundamental_income_statement_graph(page, app_url):
         page.locator(
             "#income-statement-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag"
         )
+    ).to_be_visible(timeout=10000)
+
+
+def test_fundamental_ratios_graph(page, app_url):
+    """
+    Test end to end fundamental financial ratios graph
+    """
+    page.goto(app_url)
+    page.reload()
+    # Click to find stock info
+    page.get_by_role("textbox", name="Stock symbol").click()
+    page.get_by_role("textbox", name="Stock symbol").fill("GOOG")
+    page.get_by_role("button", name="Search").click()
+    # Click Fundamental tab and verify the financial ratios graph exists
+    page.locator("#fa-id").click()
+    expect(page.locator("#fa-id")).to_be_visible()
+    expect(page.get_by_text("Fundamental Analysis")).to_be_visible()
+    ratios_graph = page.locator("#financial-ratios-graph")
+    expect(ratios_graph).to_be_visible()
+    ratios_graph.scroll_into_view_if_needed()
+    expect(
+        page.locator(
+            "#financial-ratios-graph > .js-plotly-plot > .plot-container > .user-select-none > svg > .draglayer > .xy > .nsewdrag"
+        )
     ).to_be_visible()
