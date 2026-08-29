@@ -56,78 +56,158 @@ class FinancialStatement(BaseModel):
             return None
 
     def show_balance_sheet(self) -> go.Figure | None:
-        if len(self.balance_sheet) == 0:
+        has_balance_sheet = self.balance_sheet is not None and len(self.balance_sheet) > 0
+        has_cash_flow = self.cash_flow is not None and len(self.cash_flow) > 0
+
+        if not has_balance_sheet and not has_cash_flow:
             return None
-
-        dates = [item.financial_facts.end_date for item in self.balance_sheet]
-        assets = [item.current_assets - item.inventory for item in self.balance_sheet]
-        inventory = [item.inventory for item in self.balance_sheet]
-        assets_plus_inventory = [a + i for a, i in zip(assets, inventory)]
-        liabilities = [item.current_liabilities for item in self.balance_sheet]
-
-        total_assets = [item.total_assets for item in self.balance_sheet]
-        total_liabilities = [item.total_liabilities for item in self.balance_sheet]
 
         hover_template = "%{y:$,.2f}"
         fig = go.Figure()
         fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
-        fig.add_trace(
-            go.Bar(
-                x=dates,
-                y=assets,
-                marker_color=PASTEL["mint"],
-                hovertemplate=hover_template,
-                name="Current assets",
-                offsetgroup=0,
-            ),
+
+        if has_balance_sheet:
+            dates = [item.financial_facts.end_date for item in self.balance_sheet]
+            assets = [item.current_assets - item.inventory for item in self.balance_sheet]
+            inventory = [item.inventory for item in self.balance_sheet]
+            assets_plus_inventory = [a + i for a, i in zip(assets, inventory)]
+            liabilities = [item.current_liabilities for item in self.balance_sheet]
+
+            total_assets = [item.total_assets for item in self.balance_sheet]
+            total_liabilities = [item.total_liabilities for item in self.balance_sheet]
+
+            fig.add_trace(
+                go.Bar(
+                    x=dates,
+                    y=assets,
+                    marker_color=PASTEL["mint"],
+                    hovertemplate=hover_template,
+                    name="Current assets",
+                    offsetgroup=0,
+                ),
+            )
+            fig.add_trace(
+                go.Bar(
+                    x=dates,
+                    y=inventory,
+                    marker_color=PASTEL["blue"],
+                    hovertemplate=hover_template,
+                    name="Inventory",
+                    offsetgroup=0,
+                    base=assets,
+                ),
+            )
+            fig.add_trace(
+                go.Bar(
+                    x=dates,
+                    y=liabilities,
+                    marker_color=PASTEL["peach"],
+                    hovertemplate=hover_template,
+                    name="Current liabilities",
+                    offsetgroup=0,
+                    base=assets_plus_inventory,
+                ),
+            )
+            fig.add_trace(
+                go.Bar(
+                    x=dates,
+                    y=total_assets,
+                    marker_color=PASTEL["mint"],
+                    hovertemplate=hover_template,
+                    name="Total assets",
+                    offsetgroup=1,
+                ),
+            )
+            fig.add_trace(
+                go.Bar(
+                    x=dates,
+                    y=total_liabilities,
+                    marker_color=PASTEL["peach"],
+                    hovertemplate=hover_template,
+                    name="Total liabilities",
+                    offsetgroup=1,
+                ),
+            )
+
+        if has_cash_flow:
+            cf_dates = [item.financial_facts.end_date for item in self.cash_flow]
+            end_cash_flow = [item.end_cash_flow_position for item in self.cash_flow]
+            financing_cash_flow = [item.financing_cash_flow for item in self.cash_flow]
+            investing_cash_flow = [item.investing_cash_flow for item in self.cash_flow]
+            operating_cash_flow = [item.operating_cash_flow for item in self.cash_flow]
+
+            fig.add_trace(
+                go.Scatter(
+                    x=cf_dates,
+                    y=end_cash_flow,
+                    marker_color=PASTEL["mint"],
+                    mode="lines+markers",
+                    marker=dict(
+                        size=self._scale_sizes(end_cash_flow),
+                        sizemode="diameter",
+                        line=dict(width=1, color="white"),
+                    ),
+                    hovertemplate=hover_template,
+                    name="End cash flow",
+                )
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=cf_dates,
+                    y=financing_cash_flow,
+                    marker_color=PASTEL["yellow"],
+                    mode="lines+markers",
+                    marker=dict(
+                        size=self._scale_sizes(financing_cash_flow),
+                        sizemode="diameter",
+                        line=dict(width=1, color="white"),
+                    ),
+                    hovertemplate=hover_template,
+                    name="Financing cash flow",
+                )
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=cf_dates,
+                    y=investing_cash_flow,
+                    mode="lines+markers",
+                    marker=dict(
+                        size=self._scale_sizes(investing_cash_flow),
+                        sizemode="diameter",
+                        line=dict(width=1, color="white"),
+                    ),
+                    marker_color=PASTEL["cyan"],
+                    hovertemplate=hover_template,
+                    name="Investing cash flow",
+                )
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=cf_dates,
+                    y=operating_cash_flow,
+                    mode="lines+markers",
+                    marker_color=PASTEL["rose"],
+                    marker=dict(
+                        size=self._scale_sizes(operating_cash_flow),
+                        sizemode="diameter",
+                        line=dict(width=1, color="white"),
+                    ),
+                    hovertemplate=hover_template,
+                    name="Operating cash flow",
+                )
+            )
+
+        title = (
+            "Balance Sheet & Cash Flow"
+            if (has_balance_sheet and has_cash_flow)
+            else ("Balance Sheet" if has_balance_sheet else "Cash Flow")
         )
-        fig.add_trace(
-            go.Bar(
-                x=dates,
-                y=inventory,
-                marker_color=PASTEL["blue"],
-                hovertemplate=hover_template,
-                name="Inventory",
-                offsetgroup=0,
-                base=assets,
-            ),
-        )
-        fig.add_trace(
-            go.Bar(
-                x=dates,
-                y=liabilities,
-                marker_color=PASTEL["peach"],
-                hovertemplate=hover_template,
-                name="Current liabilities",
-                offsetgroup=0,
-                base=assets_plus_inventory,
-            ),
-        )
-        fig.add_trace(
-            go.Bar(
-                x=dates,
-                y=total_assets,
-                marker_color=PASTEL["mint"],
-                hovertemplate=hover_template,
-                name="Total assets",
-                offsetgroup=1,
-            ),
-        )
-        fig.add_trace(
-            go.Bar(
-                x=dates,
-                y=total_liabilities,
-                marker_color=PASTEL["peach"],
-                hovertemplate=hover_template,
-                name="Total liabilities",
-                offsetgroup=1,
-            ),
-        )
+
         fig.update_layout(
             template="plotly_dark",
             # 'relative' stacks positive values above 0 and negative below 0
             barmode="relative",
-            title_text="Balance Sheet",
+            title_text=title,
             yaxis_title="USD",
             bargroupgap=0.1,
             xaxis=dict(

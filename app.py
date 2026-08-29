@@ -177,7 +177,6 @@ rc.register_best_performance_MA()
 rc.register_best_performance_RSI()
 rc.register_best_performance_BB()
 rc.register_fundamental_balance_sheet()
-rc.register_fundamental_cash_flow()
 rc.register_fundamental_income_statement()
 rc.register_fundamental_ratios()
 

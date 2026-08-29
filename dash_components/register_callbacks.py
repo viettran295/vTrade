@@ -12,7 +12,6 @@ from .dash_bb import DashBollingerBands
 from .dash_checklist import DashChecklist
 from .dash_tabs import DashTabs
 from .dash_balance_sheet import DashBalanceSheet
-from .dash_cash_flow import DashCashFlow
 from .dash_income_statement import DashIncomeStatement
 from .dash_ratios import DashFinancialRatios
 
@@ -23,7 +22,6 @@ class RegisterCallbacks:
         self.dash_rsi = DashRSI()
         self.dash_bb = DashBollingerBands()
         self.dash_balance_sheet = DashBalanceSheet()
-        self.dash_cash_flow = DashCashFlow()
         self.dash_income_statement = DashIncomeStatement()
         self.dash_financial_ratios = DashFinancialRatios()
         self.checklist = DashChecklist()
@@ -203,34 +201,13 @@ class RegisterCallbacks:
             try:
                 if data is not None:
                     validated_fs = self.financial_statement.model_validate(data)
-                    if validated_fs.balance_sheet:
+                    if validated_fs.balance_sheet or validated_fs.cash_flow:
                         return (
                             validated_fs.show_balance_sheet(),
                             self.display,
                         )
             except Exception as e:
                 logger.error(f"Error showing balance sheet: {e}")
-                return self.not_display
-            return self.not_display
-
-    def register_fundamental_cash_flow(self):
-        @callback(
-            Output(self.dash_cash_flow.id_cash_flow_graph, "figure"),
-            Output(self.dash_cash_flow.id_layout, "style"),
-            Input(FUNDAMENTAL_DATA_CACHE_ID, "data"),
-            prevent_initial_call=True,
-        )
-        def plot_fundamental_cash_flow(data):
-            try:
-                if data is not None:
-                    validated_fs = self.financial_statement.model_validate(data)
-                    if validated_fs.cash_flow:
-                        return (
-                            validated_fs.show_cash_flow(),
-                            self.display,
-                        )
-            except Exception as e:
-                logger.error(f"Error showing cash flow: {e}")
                 return self.not_display
             return self.not_display
 
