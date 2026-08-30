@@ -33,3 +33,6 @@ where = ["."]
 dev = [
     "pytest-rerunfailures>=16.1",
 ]
+
+[tool.pytest.ini_options]
+addopts = "--reruns 3 --reruns-delay 5"

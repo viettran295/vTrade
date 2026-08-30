@@ -6,6 +6,7 @@ services:
       - 8050:8050
     depends_on:
       - strategy-processor
+      - dragonfly
       - fundamental
 
   strategy-processor:
@@ -15,7 +16,33 @@ services:
     ports:
       - 8000:8000
   
-  fundamental:
-    image: viettrann/fundamental:x86_64
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
+    container_name: dragonfly
+    ulimits:
+      memlock: -1
+    command: >
+      --maxmemory=2gb 
+      --cache_mode=true 
+      --log_dir="/var/log/dragonfly"
     ports:
-      - 3000:3000
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 2s
+      timeout: 3s
+      retries: 5
+
+  fundamental:
+    # build: .
+    image: viettrann/fundamental:x86_64
+    container_name: fundamental
+    user: "${UID}:${GID}"
+    environment:
+      - CACHE_DB_URI=redis://dragonfly:6379
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8001:8001"
+    depends_on:
+      - dragonfly
