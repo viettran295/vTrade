@@ -24,8 +24,7 @@ rc = RegisterCallbacks()
 
 def _above_header():
     """Date time at the very top."""
-    now = datetime.now().strftime("%a %d %b %Y  %H:%M:%S CEST").upper()
-    return html.Div([html.Div(now, className="fn-datetime")], className="bbg-fnbar")
+    return html.Div(id="fn-datetime", className="bbg-fnbar")
 
 
 def _header():
@@ -41,6 +40,7 @@ app.layout = html.Div(
     children=[
         # ── Function-key bar ─────────────────────────────────
         _above_header(),
+        dcc.Interval(id="interval-datetime", interval=60000),
 
         # ── Header ───────────────────────────────────────────
         _header(),
@@ -111,6 +111,15 @@ def update_stock_data(_, search_stock):
     if "search-button" == ctx.triggered_id:
         return search_stock
     return dash.no_update
+
+
+@callback(
+    Output("fn-datetime", "children"),
+    Input("interval-datetime", "n_intervals"),
+)
+def update_datetime(_):
+    now = datetime.now().strftime("%a %d %b %Y  %H:%M").upper()
+    return now
 
 
 @callback(

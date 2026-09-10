@@ -48,7 +48,7 @@ html, body, #react-entry-point {
   padding: 2px 10px;
   gap: 4px;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.5px;
   flex-shrink: 0;
   font-family: var(--bbg-mono);
