@@ -159,7 +159,7 @@ html, body, #react-entry-point {
   font-family: var(--bbg-mono);
 }
 .bbg-main-panel {
-  max-height: calc(100vh - 120px);
+  max-height: calc(100vh - 152px);
   overflow-y: auto;
   background-color: var(--bbg-bg, #000000) !important;
   padding: 0 !important;
@@ -304,4 +304,89 @@ h4 {
   letter-spacing: 2px !important;
   text-transform: uppercase !important;
   margin-bottom: 8px !important;
+}
+
+/* ── Ticker Tape Footer ─────────────────────────────────── */
+.ticker-tape-footer {
+  background: linear-gradient(180deg, #0a0500 0%, #000000 100%);
+  border-top: 2px solid var(--bbg-orange, #ff6600);
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  flex-shrink: 0;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+/* Fade-out edges for polish */
+.ticker-tape-footer::before,
+.ticker-tape-footer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 60px;
+  z-index: 2;
+  pointer-events: none;
+}
+.ticker-tape-footer::before {
+  left: 0;
+  background: linear-gradient(90deg, #000000 0%, transparent 100%);
+}
+.ticker-tape-footer::after {
+  right: 0;
+  background: linear-gradient(270deg, #000000 0%, transparent 100%);
+}
+
+.ticker-scroll-inner {
+  display: inline-flex;
+  animation: ticker-scroll 45s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.ticker-scroll-set {
+  display: inline-flex;
+  gap: 40px;
+  padding-right: 40px;          /* matches gap so each set is equal width */
+  flex-shrink: 0;
+}
+
+.ticker-item {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 12px;
+  font-family: var(--bbg-mono);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.ticker-item .tick-sym {
+  color: var(--bbg-orange-lt, #ff9933);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.ticker-item .tick-val {
+  color: var(--bbg-white, #e8e8e8);
+}
+.ticker-item .tick-up {
+  color: var(--bbg-green, #00cc44);
+  font-weight: 700;
+}
+.ticker-item .tick-dn {
+  color: var(--bbg-red, #ff3333);
+  font-weight: 700;
+}
+
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Pause on hover */
+.ticker-tape-footer:hover .ticker-scroll-inner {
+  animation-play-state: paused;
 }

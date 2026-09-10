@@ -1,7 +1,7 @@
 from dash import Dash, html, callback, Input, Output, State, dcc, ctx
 import dash
 import dash_bootstrap_components as dbc
-from dash_components import RegisterCallbacks
+from dash_components import RegisterCallbacks, DashTickerTape
 from dotenv import load_dotenv
 import asyncio
 from loguru import logger
@@ -21,6 +21,7 @@ server = app.server
 app._favicon = "bull_icon.ico"
 
 rc = RegisterCallbacks()
+ticker_tape = DashTickerTape()
 
 def _above_header():
     """Date time at the very top."""
@@ -95,6 +96,10 @@ app.layout = html.Div(
                 ),
             ],
         ),
+        # ── Footer ticker tape ────────────────────────────────
+        ticker_tape.layout(),
+        dcc.Interval(id="interval-ticker-tape-footer", interval=60 * 60 * 1000),
+
         # Stores
         dcc.Store(id="activate-search"),
         dcc.Store(id=FUNDAMENTAL_DATA_CACHE_ID),
@@ -120,6 +125,15 @@ def update_stock_data(_, search_stock):
 def update_datetime(_):
     now = datetime.now().strftime("%a %d %b %Y  %H:%M").upper()
     return now
+
+
+@callback(
+    Output("ticker-tape-footer", "children"),
+    Input("interval-ticker-tape-footer", "n_intervals"),
+)
+def update_ticker_tape(_):
+    data = ticker_tape.fetch_ticker_data()
+    return ticker_tape.build_ticker_children(data)
 
 
 @callback(
