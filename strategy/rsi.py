@@ -92,7 +92,7 @@ class StrategyRSI(Strategy):
         )
 
         fig.update_layout(
-            title={"text": "Relative strength index (RSI) plot", "x": 0.5},
+            title={"text": "Relative strength index (RSI)", "x": 0.5},
             font=dict(size=18),
         )
         return fig

@@ -39,7 +39,7 @@ def test_bollingerbands_graph(page, app_url):
     page.get_by_role("textbox", name="Stock symbol").click()
     page.get_by_role("textbox", name="Stock symbol").fill("NVDA")
     page.get_by_role("button", name="Search").click()
-    expect(page.get_by_text("Bollinger bands")).to_be_visible()
+    expect(page.get_by_text("Bollinger bands", exact=True)).to_be_visible()
     expect(page.get_by_role("checkbox", name="Bollinger bands")).to_be_visible()
     page.get_by_role("checkbox", name="Bollinger bands").check()
     # Verify the Bollinger bands graph exists
@@ -63,7 +63,7 @@ def test_rsi_graph(page, app_url):
     page.get_by_role("textbox", name="Stock symbol").click()
     page.get_by_role("textbox", name="Stock symbol").fill("GOOG")
     page.get_by_role("button", name="Search").click()
-    expect(page.get_by_text("RSI")).to_be_visible()
+    expect(page.get_by_text("RSI", exact=True)).to_be_visible()
     expect(page.get_by_role("checkbox", name="RSI")).to_be_visible()
     page.get_by_role("checkbox", name="RSI").check()
     # Verify the Bollinger bands graph exists

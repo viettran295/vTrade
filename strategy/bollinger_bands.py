@@ -10,7 +10,7 @@ from strategy import Strategy
 class StrategyBollingerBands(Strategy):
     def __init__(self, data_fetcher: CommunicationInterface):
         super().__init__(data_fetcher)
-        self.title = "Bollinger Bands"
+        self.title = "Bollinger bands"
         self.moving_avg = ""
         self.upper_band = ""
         self.lower_band = ""
