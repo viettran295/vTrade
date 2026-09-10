@@ -54,11 +54,11 @@ class StrategyRSI(Strategy):
                 y=df[self.RSI].to_list(),
                 x=df["datetime"].to_list(),
                 name=self.RSI,
-                marker=dict(color="antiquewhite"),
+                line=dict(color="#00ccff", width=2),
             )
         )
-        fig.add_hline(y=upper_bound, line_dash="dash", line_color="red")
-        fig.add_hline(y=lower_bound, line_dash="dash", line_color="red")
+        fig.add_hline(y=upper_bound, line_dash="dash", line_color="#ff3333")
+        fig.add_hline(y=lower_bound, line_dash="dash", line_color="#00cc44")
         # Add the filled region
         fig.add_shape(
             type="rect",
@@ -66,7 +66,7 @@ class StrategyRSI(Strategy):
             x1=max(df["datetime"].to_list()),
             y0=lower_bound,
             y1=upper_bound,
-            fillcolor="rgba(255, 0, 0, 0.1)",  # Red with 20% opacity
+            fillcolor="rgba(255, 102, 0, 0.08)",
             line_width=0,
         )
 
@@ -77,7 +77,7 @@ class StrategyRSI(Strategy):
                 y=overbougt[self.RSI].to_list(),
                 x=overbougt["datetime"].to_list(),
                 mode="markers",
-                marker=dict(color="red"),
+                marker=dict(color="#ff3333", size=8, symbol="triangle-down"),
                 name="Over bought",
             )
         )
@@ -86,7 +86,7 @@ class StrategyRSI(Strategy):
                 y=oversold[self.RSI].to_list(),
                 x=oversold["datetime"].to_list(),
                 mode="markers",
-                marker=dict(color="green"),
+                marker=dict(color="#00cc44", size=8, symbol="triangle-up"),
                 name="Over sold",
             )
         )

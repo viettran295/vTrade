@@ -1,0 +1,307 @@
+/* ============================================================
+   TERMINAL THEME — vTrade Dashboard
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+
+:root {
+  --bbg-bg:         #000000;
+  --bbg-orange:     #ff6600;
+  --bbg-orange-dim: #cc4d00;
+  --bbg-orange-lt:  #ff9933;
+  --bbg-white:      #e8e8e8;
+  --bbg-dim:        #888888;
+  --bbg-sidebar:    #050505;
+  --bbg-card:       #050505;
+  --bbg-border:     #ff6600;
+  --bbg-green:      #00cc44;
+  --bbg-red:        #ff3333;
+  --bbg-magenta:    #ff00cc;
+  --bbg-yellow:     #ffdd00;
+  --bbg-cyan:       #00ccff;
+  --bbg-mono:       'Courier Prime', 'Courier New', Courier, monospace;
+}
+
+/* ── Global reset & font ─────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #react-entry-point {
+  background-color: #000000 !important;
+  color: #e8e8e8 !important;
+  font-family: var(--bbg-mono) !important;
+}
+
+/* ── Custom scrollbar ────────────────────────────────────── */
+::-webkit-scrollbar              { width: 6px; height: 6px; }
+::-webkit-scrollbar-track        { background: #0a0a0a; }
+::-webkit-scrollbar-thumb        { background: #ff6600; border-radius: 0; }
+::-webkit-scrollbar-thumb:hover  { background: #ff9933; }
+
+/* ── Function-key top bar ─────────────────────── */
+.bbg-fnbar {
+  background: var(--bbg-orange, #ff6600);
+  color: #000000;
+  display: flex;
+  align-items: center;
+  padding: 2px 10px;
+  gap: 4px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  font-family: var(--bbg-mono);
+}
+.bbg-fnbar .fn-key,
+.bbg-fn-key,
+.fn-key {
+  background: #000;
+  color: var(--bbg-orange, #ff6600);
+  padding: 1px 5px;
+  border: 1px solid var(--bbg-orange, #ff6600);
+  font-size: 10px;
+  margin-right: 1px;
+}
+.bbg-fnbar .fn-label,
+.bbg-fn-label,
+.fn-label {
+  color: #000;
+  font-size: 10px;
+  margin-right: 8px;
+}
+.bbg-fnbar .fn-spacer { flex: 1; }
+.bbg-fnbar .fn-datetime,
+.fn-datetime {
+  color: #000;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ── Header bar ────────────────────────────────── */
+.bbg-header {
+  background: var(--bbg-bg, #000000);
+  border-bottom: 2px solid var(--bbg-orange, #ff6600);
+  padding: 6px 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.bbg-header h1 {
+  color: var(--bbg-orange, #ff6600) !important;
+  font-family: var(--bbg-mono) !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  letter-spacing: 4px !important;
+  text-transform: uppercase !important;
+  margin: 0 !important;
+  text-align: center !important;
+}
+.bbg-header .bbg-bull-icon {
+  height: 36px;
+  filter: invert(48%) sepia(89%) saturate(2476%) hue-rotate(2deg) brightness(102%) contrast(106%);
+}
+.bbg-ticker-strip {
+  margin-left: auto;
+  display: flex;
+  gap: 22px;
+  font-size: 11px;
+  font-family: var(--bbg-mono);
+}
+.bbg-ticker-strip .tick-sym  { color: #ff9933; font-weight: 700; }
+.bbg-ticker-strip .tick-val  { color: #e8e8e8; }
+.bbg-ticker-strip .tick-up   { color: #00cc44; }
+.bbg-ticker-strip .tick-dn   { color: #ff3333; }
+
+/* ── App Layout & Sidebar ────────────────────────────────── */
+.bbg-layout {
+  background-color: var(--bbg-bg, #000000);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--bbg-mono);
+}
+.bbg-main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+.bbg-sidebar {
+  background: var(--bbg-sidebar, #050505) !important;
+  border-right: 2px solid var(--bbg-orange, #ff6600) !important;
+  padding: 0 !important;
+}
+.bbg-sidebar-card {
+  background-color: var(--bbg-sidebar, #050505) !important;
+  border: 1px solid #330f00 !important;
+  border-radius: 0 !important;
+  height: 100% !important;
+}
+.bbg-sidebar-body {
+  background-color: var(--bbg-sidebar, #050505) !important;
+  padding: 10px !important;
+}
+.bbg-sidebar-section {
+  border-bottom: 1px solid #330f00;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+.bbg-section-label {
+  color: var(--bbg-orange, #ff6600);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-family: var(--bbg-mono);
+}
+.bbg-main-panel {
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  background-color: var(--bbg-bg, #000000) !important;
+  padding: 0 !important;
+}
+
+/* ── Status bar ──────────────────────────────────────────── */
+.bbg-statusbar {
+  background: var(--bbg-orange, #ff6600);
+  color: #000000;
+  display: flex;
+  align-items: center;
+  padding: 2px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-family: var(--bbg-mono);
+  flex-shrink: 0;
+}
+.bbg-statusbar .sb-sep  { opacity: 0.4; margin: 0 8px; }
+.bbg-statusbar .sb-spacer { flex: 1; }
+
+/* ── Inputs ──────────────────────────────────────────────── */
+input[type="text"],
+input[type="number"],
+.form-control,
+.bbg-input {
+  background: #0a0a0a !important;
+  border: 1px solid #ff6600 !important;
+  border-radius: 0 !important;
+  color: #ff9933 !important;
+  font-family: 'Courier Prime', 'Courier New', monospace !important;
+  font-size: 13px !important;
+  caret-color: #ff6600;
+  outline: none !important;
+  box-shadow: none !important;
+}
+input[type="text"]::placeholder,
+input[type="number"]::placeholder,
+.form-control::placeholder {
+  color: #663300 !important;
+  font-size: 11px;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+.form-control:focus {
+  background: #0f0500 !important;
+  border-color: #ff9933 !important;
+  box-shadow: 0 0 4px rgba(255,102,0,0.4) !important;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn, button {
+  font-family: 'Courier Prime', 'Courier New', monospace !important;
+  border-radius: 0 !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+}
+.btn-success,
+.btn-success:hover,
+.btn-success:active {
+  background-color: #ff6600 !important;
+  border-color: #ff6600 !important;
+  color: #000000 !important;
+}
+.btn-info,
+.btn-info:hover,
+.btn-info:active {
+  background-color: transparent !important;
+  border-color: #ff6600 !important;
+  color: #ff6600 !important;
+}
+.btn-info:hover {
+  background-color: #1a0500 !important;
+}
+.btn-outline-info,
+.btn-outline-info:hover {
+  border-color: #ff6600 !important;
+  color: #ff6600 !important;
+  background: transparent !important;
+}
+
+/* ── Checklist ───────────────────────────────────────────── */
+.form-check-input,
+input[type="checkbox"] {
+  accent-color: #ff6600 !important;
+  border: 1px solid #ff6600 !important;
+  background: #000 !important;
+  border-radius: 0 !important;
+}
+
+/* ── Cards ───────────────────────────────────────────────── */
+.card {
+  background: #050505 !important;
+  border: 1px solid #330f00 !important;
+  border-radius: 0 !important;
+}
+.card-body {
+  background: #050505 !important;
+}
+
+/* ── Tabs ────────────────────────────────────────────────── */
+.tab--selected {
+  background-color: #ff6600 !important;
+  border-top-color: #ff6600 !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+/* ── Radio items ─────────────────────────────────────────── */
+input[type="radio"] {
+  accent-color: #ff6600 !important;
+}
+
+/* ── Labels ──────────────────────────────────────────────── */
+label, .form-label {
+  color: #e8e8e8 !important;
+  font-family: 'Courier Prime', 'Courier New', monospace !important;
+}
+
+/* ── Plotly graph container ──────────────────────────────── */
+.js-plotly-plot,
+.plot-container {
+  background: #030303 !important;
+}
+.js-plotly-plot .main-svg {
+  background: transparent !important;
+}
+
+/* ── Bootstrap overrides ─────────────────────────────────── */
+.container-fluid {
+  background: #000000 !important;
+}
+.row { margin: 0 !important; }
+
+/* ── H4 headings in sidebar ──────────────────────────────── */
+h4 {
+  color: #ff6600 !important;
+  font-family: 'Courier Prime', 'Courier New', monospace !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  margin-bottom: 8px !important;
+}
