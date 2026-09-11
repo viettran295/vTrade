@@ -340,7 +340,6 @@ class RegisterCallbacks:
 
     def register_fundamental_analysis_callbacks(self):
         @callback(
-            Output(self.fa.ticker_badge_id, "children"),
             Output(self.fa.current_ratio_val_id, "children"),
             Output(self.fa.current_ratio_sub_id, "children"),
             Output(self.fa.quick_ratio_val_id, "children"),
@@ -348,11 +347,9 @@ class RegisterCallbacks:
             Output(self.fa.gauge_graph_id, "figure"),
             Output(self.fa.revenue_graph_id, "figure"),
             Input(FUNDAMENTAL_DATA_CACHE_ID, "data"),
-            State("search-stock", "value"),
             prevent_initial_call=True,
         )
-        def update_intelligence(data, search_stock):
-            stock_str = (search_stock or "--").upper() + " US EQUITY"
+        def update_intelligence(data):
             if data is not None:
                 try:
                     validated_fs = self.financial_statement.model_validate(data)
@@ -366,7 +363,6 @@ class RegisterCallbacks:
                     revenue_fig = validated_fs.show_quarterly_revenue_bars()
 
                     return (
-                        stock_str,
                         cr_val,
                         cr_sub,
                         qr_val,
@@ -377,6 +373,6 @@ class RegisterCallbacks:
                 except Exception as e:
                     logger.error(f"Error updating SEC Intelligence: {e}")
 
-            return stock_str, "--", "Peer Med: --", "--", "Peer Med: --", {}, {}
+            return "--", "Peer Med: --", "--", "Peer Med: --", {}, {}
 
 

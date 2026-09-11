@@ -690,7 +690,7 @@ class FinancialStatement(BaseModel):
             height=180,
             annotations=[
                 dict(
-                    text=f"Peer Median: {peer_median:.2f} (Cyan Line)",
+                    text=f"Peer Median: {peer_median:.2f}",
                     x=0.5,
                     y=0.0,
                     xref="paper",

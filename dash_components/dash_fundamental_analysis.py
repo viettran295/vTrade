@@ -5,7 +5,6 @@ import utils
 class DashFundamentalAnalysis:
     def __init__(self):
         self.id_layout = "fundamental-layout"
-        self.ticker_badge_id = "ticker-badge"
         self.current_ratio_val_id = "current-ratio-val"
         self.current_ratio_sub_id = "current-ratio-sub"
         self.quick_ratio_val_id = "quick-ratio-val"
@@ -23,7 +22,6 @@ class DashFundamentalAnalysis:
                     className="fa-section-header",
                     children=[
                         html.Span("■ FUNDAMENTAL ANALYSIS", className="fa-header-title"),
-                        html.Span(id=self.ticker_badge_id, className="fa-ticker-badge", children="--"),
                     ],
                 ),
 
