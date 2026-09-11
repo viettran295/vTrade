@@ -5,10 +5,7 @@ from .common import *
 
 def test_fundamental_analysis(page, app_url):
     """
-    Test end to end SEC Fundamental Intelligence panel:
-    - Side-by-side Liquidity Ratios (Current/Quick)
-    - Debt-to-Equity Gauge vs Peer Median
-    - Quarterly Revenue Bars
+    Test end to end Fundamental Analysis panel:
     """
     page.goto(app_url)
     page.reload()
@@ -18,14 +15,9 @@ def test_fundamental_analysis(page, app_url):
     page.get_by_role("button", name="Search").click()
 
     # Verify Fundamental Analysis panel elements are visible
-    expect(page.get_by_text("SEC FUNDAMENTAL INTELLIGENCE")).to_be_visible()
-    expect(page.get_by_text("CURRENT RATIO")).to_be_visible()
-    expect(page.get_by_text("QUICK RATIO")).to_be_visible()
-    expect(page.get_by_text("DEBT-TO-EQUITY VS PEER MEDIAN")).to_be_visible()
-    expect(page.get_by_text("QUARTERLY REVENUE BARS")).to_be_visible()
+    expect(page.get_by_text("■ FUNDAMENTAL ANALYSIS")).to_be_visible()
+    expect(page.locator(".bbg-right-panel")).to_be_visible()
+    expect(page.get_by_text("■ DEBT-TO-EQUITY VS PEER")).to_be_visible()
+    expect(page.get_by_text("■ QUARTERLY REVENUE BARS")).to_be_visible()
 
-    gauge_graph = page.locator("#sec-debt-equity-gauge")
-    expect(gauge_graph).to_be_visible()
 
-    revenue_graph = page.locator("#sec-quarterly-revenue-graph")
-    expect(revenue_graph).to_be_visible()

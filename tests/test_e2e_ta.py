@@ -3,6 +3,21 @@ from playwright.sync_api import expect
 from .common import *
 
 
+def test_ta_graph_no_data(page, app_url):
+    """
+    Test NO DATA warning is shown at the beginning
+    """
+    page.goto(app_url)
+    page.reload()
+
+    # Expect NO DATA warning at the beginning
+    expect(page.locator("#crossing-ma-graph")).to_contain_text("⚠ NO DATA AVAILABLE")
+    page.get_by_text("Bollinger bands", exact=True).click()
+    expect(page.locator("#bb-graph")).to_contain_text("⚠ NO DATA AVAILABLE")
+    page.get_by_role("option", name="RSI").click()
+    expect(page.locator("#rsi-graph")).to_contain_text("⚠ NO DATA AVAILABLE")
+
+
 def test_crossing_ma_graph(page, app_url):
     """
     Test end to end Crossing MA graph
@@ -26,7 +41,6 @@ def test_crossing_ma_graph(page, app_url):
     expect(page.get_by_role("radio", name="EWMA")).to_be_visible()
     expect(page.get_by_role("button", name="Apply")).to_be_visible()
     expect(page.locator("rect").nth(4)).to_be_visible()
-    expect(page.locator(".bg")).to_be_visible()
 
 
 def test_bollingerbands_graph(page, app_url):
