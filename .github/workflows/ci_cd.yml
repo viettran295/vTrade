@@ -46,6 +46,8 @@ jobs:
         --reruns 3
         --reruns-delay 5
         -rR
+        -s
+        --log-cli-level=WARNING
         --html=report.html
         --self-contained-html
         --screenshot=only-on-failure
