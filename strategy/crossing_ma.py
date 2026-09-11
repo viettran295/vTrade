@@ -15,6 +15,7 @@ class StrategyCrossingMA(Strategy):
         long_MA: int = 50,
     ):
         super().__init__(data_fetcher)
+        self.title = "Crossing Moving Average"
         self.short_ma_type = ""
         self.long_ma_type = ""
         self.short_ma = short_MA
@@ -48,14 +49,18 @@ class StrategyCrossingMA(Strategy):
             data = self.__process_response(response)
             return data
 
-    def show(self, df: pl.DataFrame) -> go.Figure | None:
+    def show(
+        self,
+        df: pl.DataFrame,
+        stock: str | None = None,
+    ) -> go.Figure | None:
         if df_is_none(df):
             logger.error("Dataframe for MA calculation is None")
-            return
+            return self.show_no_data(stock=stock)
 
         if not self.__columns_exist(df):
             logger.error("Columns in DataFrame for MA calculation are missing")
-            return
+            return self.show_no_data(stock=stock, message="INSUFFICIENT DATA COLUMNS")
 
         signal_buy = df.filter(df[self.signal] == -1)
         signal_sell = df.filter(df[self.signal] == 1)
@@ -116,10 +121,10 @@ class StrategyCrossingMA(Strategy):
             elif "SMA" in col or "EWMA" in col:
                 ma_cols.append(col)
         ma_cols = sorted(ma_cols)
+        if len(ma_cols) < 2 or not self.signal:
+            return False
         self.short_ma_type = ma_cols[0]
         self.long_ma_type = ma_cols[1]
-        if self.short_ma_type == "" or self.long_ma_type == "" or self.signal == "":
-            return False
         return True
 
     def __process_response(self, data: dict) -> pl.DataFrame | None:

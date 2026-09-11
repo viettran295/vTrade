@@ -18,6 +18,7 @@ class StrategyRSI(Strategy):
         lower_bound: int = 20,
     ):
         super().__init__(data_fetcher)
+        self.title = "Relative Strength Index (RSI)"
         self.period = period
         self.upper_bound = upper_bound
         self.lower_bound = lower_bound
@@ -37,15 +38,15 @@ class StrategyRSI(Strategy):
             return data
 
     def show(
-        self, df: pl.DataFrame, upper_bound=80, lower_bound=20
+        self, df: pl.DataFrame, upper_bound=80, lower_bound=20, stock: str | None = None
     ) -> go.Figure | None:
-        if not check_list_substr_in_str(["rsi", "datetime"], df.columns):
-            logger.debug("Dataframe columns do not contain RSI")
-            return
+        if df is None or df.is_empty() or not check_list_substr_in_str(["rsi", "datetime"], df.columns):
+            logger.debug("Dataframe is empty or columns do not contain RSI")
+            return self.show_no_data(stock=stock, message="RSI DATA UNAVAILABLE")
 
         if not self.__columns_exist(df):
-            logger.error("Columns in DataFrame for MA calculation are missing")
-            return
+            logger.error("Columns in DataFrame for RSI calculation are missing")
+            return self.show_no_data(stock=stock, message="INSUFFICIENT DATA COLUMNS")
         fig = go.Figure()
         fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
 

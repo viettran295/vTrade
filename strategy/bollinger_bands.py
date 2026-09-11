@@ -31,14 +31,14 @@ class StrategyBollingerBands(Strategy):
             data = self.__process_response(response)
             return data
 
-    def show(self, df: pl.DataFrame) -> go.Figure | None:
+    def show(self, df: pl.DataFrame, stock: str | None = None) -> go.Figure | None:
         if df_is_none(df):
             logger.error("Invalid DataFrame")
-            return None
+            return self.show_no_data(stock=stock)
 
         if not self.__columns_exist(df):
             logger.error("Invalid DataFrame")
-            return None
+            return self.show_no_data(stock=stock, message="INSUFFICIENT DATA COLUMNS")
 
         overbound = df.filter((pl.col("high") > pl.col(self.upper_band)))
         underbound = df.filter((pl.col("low") < pl.col(self.lower_band)))

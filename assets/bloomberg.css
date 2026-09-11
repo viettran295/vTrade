@@ -390,3 +390,125 @@ h4 {
 .ticker-tape-footer:hover .ticker-scroll-inner {
   animation-play-state: paused;
 }
+
+/* ── 3-Column Workstation Layout ─────────────────────────── */
+.bbg-center-panel {
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  background-color: var(--bbg-bg, #000000) !important;
+  border-right: 1px solid #330f00 !important;
+  padding: 0 4px !important;
+}
+
+.bbg-right-panel {
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  background-color: var(--bbg-sidebar, #050505) !important;
+  border-left: 2px solid var(--bbg-orange, #ff6600) !important;
+  padding: 6px 12px !important;
+}
+
+/* ── SEC Fundamental Intelligence Panel ──────────────────── */
+.fa-fundamental-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fa-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0a0a0a;
+  border-left: 3px solid var(--bbg-orange, #ff6600);
+  border-bottom: 1px solid #330f00;
+  padding: 4px 10px;
+  margin-bottom: 4px;
+}
+
+.fa-header-title {
+  color: var(--bbg-orange, #ff6600);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  font-family: var(--bbg-mono);
+}
+
+.fa-ticker-badge {
+  color: #000000;
+  background: var(--bbg-orange, #ff6600);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  letter-spacing: 1px;
+  font-family: var(--bbg-mono);
+}
+
+.fa-sub-header {
+  color: var(--bbg-orange-lt, #ff9933);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  margin: 4px 0 2px 0;
+  text-transform: uppercase;
+  font-family: var(--bbg-mono);
+}
+
+.fa-liquidity-container {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.fa-metric-card {
+  flex: 1;
+  background: #0a0a0a;
+  border: 1px solid #330f00;
+  border-top: 2px solid var(--bbg-orange, #ff6600);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.fa-card-title {
+  color: var(--bbg-dim, #888888);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+  font-family: var(--bbg-mono);
+}
+
+.fa-card-val {
+  color: var(--bbg-orange, #ff6600);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-family: var(--bbg-mono);
+  line-height: 1.2;
+}
+
+.fa-card-sub {
+  color: var(--bbg-cyan, #00ccff);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-family: var(--bbg-mono);
+  margin-top: 2px;
+}
+
+.fa-gauge-container {
+  background: #0a0a0a;
+  border: 1px solid #330f00;
+  padding: 6px 8px;
+}
+
+.fa-revenue-container {
+  background: #0a0a0a;
+  border: 1px solid #330f00;
+  padding: 6px 8px;
+}
+

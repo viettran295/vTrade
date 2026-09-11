@@ -50,7 +50,7 @@ app.layout = html.Div(
         html.Div(
             className="bbg-main-content",
             children=[
-                # Sidebar
+                # Column 1: Controls Sidebar (width=2)
                 dbc.Col(
                     [
                         dbc.Card(
@@ -88,11 +88,32 @@ app.layout = html.Div(
                     className="bbg-sidebar",
                 ),
 
-                # Main panel
+                # Column 2: Center Interactive Chart Panel (width=6)
                 dbc.Col(
-                    [rc.tabs.layout()],
-                    className="bbg-main-panel",
-                    width=10,
+                    [
+                        rc.x_ma.layout(),
+                        rc.dash_bb.layout(),
+                        rc.dash_rsi.layout(),
+                    ],
+                    className="bbg-center-panel",
+                    width=8,
+                ),
+
+                # Column 3: Right Fundamental Analysis Intelligence Panel (width=4)
+                dbc.Col(
+                    [
+                        rc.fa.layout(),
+                        html.Div(
+                            [
+                                rc.dash_balance_sheet.layout(),
+                                rc.dash_income_statement.layout(),
+                                rc.dash_financial_ratios.layout(),
+                            ],
+                            style={"display": "none"},
+                        ),
+                    ],
+                    className="bbg-right-panel",
+                    width=2,
                 ),
             ],
         ),
@@ -174,6 +195,7 @@ rc.register_BB_plot_callback()
 rc.register_best_performance_MA()
 rc.register_best_performance_RSI()
 rc.register_best_performance_BB()
+rc.register_fundamental_analysis_callbacks()
 rc.register_fundamental_balance_sheet()
 rc.register_fundamental_income_statement()
 rc.register_fundamental_ratios()
