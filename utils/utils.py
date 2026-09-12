@@ -5,10 +5,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+font_mono   = "'Courier Prime','Courier New',Courier,monospace"
 colors = {
-    "background": "#111111",
-    "text": "#04bc8c",
-    "sidebar": "#40403E",
+    "background": "#000000",        # Pure black — Bloomberg bg
+    "text": "#ff6600",              # Bloomberg orange
+    "text_secondary": "#e8e8e8",    # Light white text
+    "text_dim": "#888888",          # Dim/muted text
+    "sidebar": "#050505",           # Near-black sidebar
+    "card": "#050505",              # Card/panel background
+    "border": "#ff6600",            # Orange border
+    "accent_green": "#00cc44",      # Positive / buy signals
+    "accent_red": "#ff3333",        # Negative / sell signals
+    "accent_magenta": "#ff00cc",    # Short MA line
+    "accent_yellow": "#ffdd00",     # Long MA line
+    "accent_cyan": "#00ccff",       # RSI line
 }
 
 

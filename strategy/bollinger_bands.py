@@ -10,7 +10,7 @@ from strategy import Strategy
 class StrategyBollingerBands(Strategy):
     def __init__(self, data_fetcher: CommunicationInterface):
         super().__init__(data_fetcher)
-        self.title = "Bollinger Bands"
+        self.title = "Bollinger bands"
         self.moving_avg = ""
         self.upper_band = ""
         self.lower_band = ""
@@ -31,14 +31,14 @@ class StrategyBollingerBands(Strategy):
             data = self.__process_response(response)
             return data
 
-    def show(self, df: pl.DataFrame) -> go.Figure | None:
+    def show(self, df: pl.DataFrame, stock: str | None = None) -> go.Figure | None:
         if df_is_none(df):
             logger.error("Invalid DataFrame")
-            return None
+            return self.show_no_data(stock=stock)
 
         if not self.__columns_exist(df):
             logger.error("Invalid DataFrame")
-            return None
+            return self.show_no_data(stock=stock, message="INSUFFICIENT DATA COLUMNS")
 
         overbound = df.filter((pl.col("high") > pl.col(self.upper_band)))
         underbound = df.filter((pl.col("low") < pl.col(self.lower_band)))
@@ -63,6 +63,7 @@ class StrategyBollingerBands(Strategy):
                 x=df["datetime"].to_list(),
                 y=df[self.moving_avg].to_list(),
                 name=self.moving_avg,
+                line=dict(color="#ff9933", width=1.5),
             )
         )
         fig.add_trace(
@@ -70,6 +71,7 @@ class StrategyBollingerBands(Strategy):
                 x=df["datetime"].to_list(),
                 y=df[self.lower_band].to_list(),
                 name=self.lower_band,
+                line=dict(color="#00ccff", width=1.5),
             )
         )
         fig.add_trace(
@@ -78,7 +80,8 @@ class StrategyBollingerBands(Strategy):
                 y=df[self.upper_band].to_list(),
                 name=self.upper_band,
                 fill="tonexty",
-                fillcolor="rgba(255, 255, 255, 0.2)",
+                fillcolor="rgba(0, 204, 255, 0.12)",
+                line=dict(color="#00ccff", width=1.5),
             )
         )
         fig.add_trace(
@@ -87,16 +90,16 @@ class StrategyBollingerBands(Strategy):
                 y=overbound["high"].to_list(),
                 name="Over bought",
                 mode="markers",
-                marker=dict(size=5),
+                marker=dict(size=8, color="#ff3333", symbol="triangle-down"),
             )
         )
         fig.add_trace(
             go.Scatter(
                 x=underbound["datetime"].to_list(),
                 y=underbound["low"].to_list(),
-                name="Over sell",
+                name="Over sold",
                 mode="markers",
-                marker=dict(size=5),
+                marker=dict(size=8, color="#00cc44", symbol="triangle-up"),
             )
         )
         fig.update_layout(

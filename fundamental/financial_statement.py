@@ -588,3 +588,192 @@ class FinancialStatement(BaseModel):
             for v in abs_vals
         ]
 
+    def get_liquidity_ratios(self) -> dict:
+        """Returns latest Current Ratio and Quick Ratio compared to peer median."""
+        cr_company = None
+        qr_company = None
+
+        if self.balance_sheet and len(self.balance_sheet) > 0:
+            # Sort or use latest item
+            latest_bs = self.balance_sheet[0]
+            if latest_bs.current_liabilities and latest_bs.current_liabilities != 0:
+                cr_company = round(latest_bs.current_assets / latest_bs.current_liabilities, 2)
+                qr_company = round((latest_bs.current_assets - latest_bs.inventory) / latest_bs.current_liabilities, 2)
+
+        peer_cr = getattr(self.industry_ratios, "current_ratio", None) if self.industry_ratios else None
+        peer_qr = getattr(self.industry_ratios, "quick_ratio", None) if self.industry_ratios else None
+
+        return {
+            "current_ratio": cr_company,
+            "quick_ratio": qr_company,
+            "peer_current_ratio": round(peer_cr, 2) if peer_cr is not None else None,
+            "peer_quick_ratio": round(peer_qr, 2) if peer_qr is not None else None,
+        }
+
+    def get_earnings_dates(self) -> list[str]:
+        """Returns unique sorted list of quarterly SEC filing / statement end dates."""
+        dates = set()
+        if self.income_statement:
+            for item in self.income_statement:
+                if item.financial_facts and item.financial_facts.end_date:
+                    dates.add(item.financial_facts.end_date)
+        if self.balance_sheet:
+            for item in self.balance_sheet:
+                if item.financial_facts and item.financial_facts.end_date:
+                    dates.add(item.financial_facts.end_date)
+        return sorted(list(dates))
+
+    def show_debt_to_equity_gauge(self) -> go.Figure | None:
+        """Generates a Bloomberg terminal-themed Debt-to-Equity gauge benchmarked against peer median."""
+        company_de = 0.0
+        if self.balance_sheet and len(self.balance_sheet) > 0:
+            latest = self.balance_sheet[0]
+            if latest.total_equity and latest.total_equity != 0:
+                company_de = round(latest.total_liabilities / latest.total_equity, 2)
+            elif latest.total_assets and latest.total_assets != 0:
+                company_de = round(latest.total_liabilities / latest.total_assets, 2)
+
+        peer_median = 1.0
+        if self.industry_ratios:
+            if self.industry_ratios.debt_to_equity_ratio:
+                peer_median = round(self.industry_ratios.debt_to_equity_ratio, 2)
+            elif self.industry_ratios.debt_ratio:
+                peer_median = round(self.industry_ratios.debt_ratio, 2)
+
+        max_val = max(3.0, round(max(company_de, peer_median) * 1.4, 1))
+
+        fig = go.Figure(
+            go.Indicator(
+                mode="gauge+number+delta",
+                value=company_de,
+                delta={
+                    "reference": peer_median,
+                    "position": "bottom",
+                    "relative": False,
+                    "valueformat": ".2f",
+                    "font": {"color": "#ff9933", "size": 13, "family": "Courier Prime, Courier New, monospace"},
+                },
+                number={
+                    "font": {"color": "#ff6600", "size": 28, "family": "Courier Prime, Courier New, monospace"},
+                    "valueformat": ".2f",
+                },
+                gauge={
+                    "axis": {
+                        "range": [0, max_val],
+                        "tickwidth": 1,
+                        "tickcolor": "#ff6600",
+                        "tickfont": {"color": "#888888", "size": 10, "family": "Courier Prime, monospace"},
+                    },
+                    "bar": {"color": "#ff6600", "thickness": 0.35},
+                    "bgcolor": "#0a0a0a",
+                    "borderwidth": 1,
+                    "bordercolor": "#330f00",
+                    "steps": [
+                        {"range": [0, max_val * 0.33], "color": "rgba(0, 204, 68, 0.15)"},
+                        {"range": [max_val * 0.33, max_val * 0.66], "color": "rgba(255, 153, 51, 0.15)"},
+                        {"range": [max_val * 0.66, max_val], "color": "rgba(255, 51, 51, 0.15)"},
+                    ],
+                    "threshold": {
+                        "line": {"color": "#00ccff", "width": 3},
+                        "thickness": 0.85,
+                        "value": peer_median,
+                    },
+                },
+            )
+        )
+
+        fig.update_layout(
+            paper_bgcolor="#050505",
+            plot_bgcolor="#050505",
+            font=dict(family="Courier Prime, Courier New, monospace", color="#e8e8e8"),
+            margin=dict(l=25, r=25, t=10, b=10),
+            height=180,
+            annotations=[
+                dict(
+                    text=f"Peer Median: {peer_median:.2f}",
+                    x=0.5,
+                    y=0.0,
+                    xref="paper",
+                    yref="paper",
+                    showarrow=False,
+                    font=dict(color="#00ccff", size=10, family="Courier Prime, monospace"),
+                )
+            ],
+        )
+        return fig
+
+    def show_quarterly_revenue_bars(self) -> go.Figure | None:
+        """Generates a Bloomberg terminal-themed quarterly revenue bar chart."""
+        if not self.income_statement:
+            return None
+
+        # Sort chronologically by date
+        sorted_items = sorted(
+            [item for item in self.income_statement if item.financial_facts and item.financial_facts.end_date],
+            key=lambda x: x.financial_facts.end_date,
+        )
+
+        if not sorted_items:
+            return None
+
+        # Take last 8 quarters max for readability
+        recent_items = sorted_items[-8:]
+        dates = [
+            f"{item.financial_facts.fiscal_period or ''} {item.financial_facts.end_date[-5:]}"
+            if item.financial_facts.fiscal_period
+            else item.financial_facts.end_date
+            for item in recent_items
+        ]
+        revenues = [item.total_revenue / 1e9 if item.total_revenue else 0.0 for item in recent_items]
+        net_incomes = [item.net_income / 1e9 if item.net_income else 0.0 for item in recent_items]
+
+        fig = go.Figure()
+        fig.add_trace(
+            go.Bar(
+                x=dates,
+                y=revenues,
+                name="Revenue ($B)",
+                marker_color="#ff6600",
+                hovertemplate="%{x}<br>Revenue: $%{y:.2f}B<extra></extra>",
+            )
+        )
+        fig.add_trace(
+            go.Bar(
+                x=dates,
+                y=net_incomes,
+                name="Net Income ($B)",
+                marker_color="#00ccff",
+                hovertemplate="%{x}<br>Net Income: $%{y:.2f}B<extra></extra>",
+            )
+        )
+
+        fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="#050505",
+            plot_bgcolor="#050505",
+            barmode="group",
+            bargap=0.2,
+            bargroupgap=0.1,
+            margin=dict(l=35, r=10, t=10, b=25),
+            height=210,
+            xaxis=dict(
+                tickfont=dict(color="#888888", size=9, family="Courier Prime, monospace"),
+                gridcolor="#1a0a00",
+            ),
+            yaxis=dict(
+                title=dict(text="$ Billions", font=dict(color="#888888", size=10)),
+                tickfont=dict(color="#888888", size=9, family="Courier Prime, monospace"),
+                gridcolor="#1a0a00",
+            ),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                font=dict(color="#e8e8e8", size=9, family="Courier Prime, monospace"),
+            ),
+        )
+        return fig
+
+
