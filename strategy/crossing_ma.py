@@ -15,6 +15,7 @@ class StrategyCrossingMA(Strategy):
         long_MA: int = 50,
     ):
         super().__init__(data_fetcher)
+        self.title = "Crossing Moving Average"
         self.short_ma_type = ""
         self.long_ma_type = ""
         self.short_ma = short_MA
@@ -48,14 +49,18 @@ class StrategyCrossingMA(Strategy):
             data = self.__process_response(response)
             return data
 
-    def show(self, df: pl.DataFrame) -> go.Figure | None:
+    def show(
+        self,
+        df: pl.DataFrame,
+        stock: str | None = None,
+    ) -> go.Figure | None:
         if df_is_none(df):
             logger.error("Dataframe for MA calculation is None")
-            return
+            return self.show_no_data(stock=stock)
 
         if not self.__columns_exist(df):
             logger.error("Columns in DataFrame for MA calculation are missing")
-            return
+            return self.show_no_data(stock=stock, message="INSUFFICIENT DATA COLUMNS")
 
         signal_buy = df.filter(df[self.signal] == -1)
         signal_sell = df.filter(df[self.signal] == 1)
@@ -70,7 +75,7 @@ class StrategyCrossingMA(Strategy):
                 x=df["datetime"].to_list(),
                 y=df[f"{self.short_ma_type}"].to_list(),
                 name=f"{self.short_ma_type}",
-                line=dict(color="#FFFF00", width=2),
+                line=dict(color="#ffdd00", width=2),
             )
         )
 
@@ -80,7 +85,8 @@ class StrategyCrossingMA(Strategy):
                 y=df[f"{self.long_ma_type}"].to_list(),
                 name=f"{self.long_ma_type}",
                 fill="tonexty",
-                line=dict(color="white", width=2),
+                fillcolor="rgba(255, 255, 255, 0.08)",
+                line=dict(color="#ffffff", width=2),
             )
         )
 
@@ -89,7 +95,7 @@ class StrategyCrossingMA(Strategy):
                 x=signal_buy["datetime"].to_list(),
                 y=signal_buy[self.short_ma_type].to_list(),
                 mode="markers",
-                marker=dict(size=12, symbol="triangle-up", color="lawngreen"),
+                marker=dict(size=12, symbol="triangle-up", color="#00cc44"),
                 name="Buying signal",
             )
         )
@@ -99,7 +105,7 @@ class StrategyCrossingMA(Strategy):
                 x=signal_sell["datetime"].to_list(),
                 y=signal_sell[self.short_ma_type].to_list(),
                 mode="markers",
-                marker=dict(size=12, symbol="triangle-down", color="red"),
+                marker=dict(size=12, symbol="triangle-down", color="#ff3333"),
                 name="Selling signal",
             )
         )
@@ -115,10 +121,10 @@ class StrategyCrossingMA(Strategy):
             elif "SMA" in col or "EWMA" in col:
                 ma_cols.append(col)
         ma_cols = sorted(ma_cols)
+        if len(ma_cols) < 2 or not self.signal:
+            return False
         self.short_ma_type = ma_cols[0]
         self.long_ma_type = ma_cols[1]
-        if self.short_ma_type == "" or self.long_ma_type == "" or self.signal == "":
-            return False
         return True
 
     def __process_response(self, data: dict) -> pl.DataFrame | None:

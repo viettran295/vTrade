@@ -18,6 +18,7 @@ class StrategyRSI(Strategy):
         lower_bound: int = 20,
     ):
         super().__init__(data_fetcher)
+        self.title = "Relative Strength Index (RSI)"
         self.period = period
         self.upper_bound = upper_bound
         self.lower_bound = lower_bound
@@ -37,15 +38,15 @@ class StrategyRSI(Strategy):
             return data
 
     def show(
-        self, df: pl.DataFrame, upper_bound=80, lower_bound=20
+        self, df: pl.DataFrame, upper_bound=80, lower_bound=20, stock: str | None = None
     ) -> go.Figure | None:
-        if not check_list_substr_in_str(["rsi", "datetime"], df.columns):
-            logger.debug("Dataframe columns do not contain RSI")
-            return
+        if df is None or df.is_empty() or not check_list_substr_in_str(["rsi", "datetime"], df.columns):
+            logger.debug("Dataframe is empty or columns do not contain RSI")
+            return self.show_no_data(stock=stock, message="RSI DATA UNAVAILABLE")
 
         if not self.__columns_exist(df):
-            logger.error("Columns in DataFrame for MA calculation are missing")
-            return
+            logger.error("Columns in DataFrame for RSI calculation are missing")
+            return self.show_no_data(stock=stock, message="INSUFFICIENT DATA COLUMNS")
         fig = go.Figure()
         fig.update_layout(template="plotly_dark", xaxis_rangeslider_visible=False)
 
@@ -54,11 +55,11 @@ class StrategyRSI(Strategy):
                 y=df[self.RSI].to_list(),
                 x=df["datetime"].to_list(),
                 name=self.RSI,
-                marker=dict(color="antiquewhite"),
+                line=dict(color="#00ccff", width=2),
             )
         )
-        fig.add_hline(y=upper_bound, line_dash="dash", line_color="red")
-        fig.add_hline(y=lower_bound, line_dash="dash", line_color="red")
+        fig.add_hline(y=upper_bound, line_dash="dash", line_color="#ff3333")
+        fig.add_hline(y=lower_bound, line_dash="dash", line_color="#00cc44")
         # Add the filled region
         fig.add_shape(
             type="rect",
@@ -66,7 +67,7 @@ class StrategyRSI(Strategy):
             x1=max(df["datetime"].to_list()),
             y0=lower_bound,
             y1=upper_bound,
-            fillcolor="rgba(255, 0, 0, 0.1)",  # Red with 20% opacity
+            fillcolor="rgba(255, 102, 0, 0.08)",
             line_width=0,
         )
 
@@ -77,7 +78,7 @@ class StrategyRSI(Strategy):
                 y=overbougt[self.RSI].to_list(),
                 x=overbougt["datetime"].to_list(),
                 mode="markers",
-                marker=dict(color="red"),
+                marker=dict(color="#ff3333", size=8, symbol="triangle-down"),
                 name="Over bought",
             )
         )
@@ -86,13 +87,13 @@ class StrategyRSI(Strategy):
                 y=oversold[self.RSI].to_list(),
                 x=oversold["datetime"].to_list(),
                 mode="markers",
-                marker=dict(color="green"),
+                marker=dict(color="#00cc44", size=8, symbol="triangle-up"),
                 name="Over sold",
             )
         )
 
         fig.update_layout(
-            title={"text": "Relative strength index (RSI) plot", "x": 0.5},
+            title={"text": "Relative strength index (RSI)", "x": 0.5},
             font=dict(size=18),
         )
         return fig

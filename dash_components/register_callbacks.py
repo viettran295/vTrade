@@ -3,7 +3,7 @@ import asyncio
 
 from utils.comm_interface import *
 from strategy import StrategyCrossingMA, StrategyRSI, StrategyBollingerBands
-from fundamental import FinancialStatement, BalanceSheet
+from fundamental import FinancialStatement
 from common import FUNDAMENTAL_DATA_CACHE_ID
 
 from .dash_crossing_ma import DashCrossingMA
@@ -14,6 +14,7 @@ from .dash_tabs import DashTabs
 from .dash_balance_sheet import DashBalanceSheet
 from .dash_income_statement import DashIncomeStatement
 from .dash_ratios import DashFinancialRatios
+from .dash_fundamental_analysis import DashFundamentalAnalysis
 
 
 class RegisterCallbacks:
@@ -24,6 +25,7 @@ class RegisterCallbacks:
         self.dash_balance_sheet = DashBalanceSheet()
         self.dash_income_statement = DashIncomeStatement()
         self.dash_financial_ratios = DashFinancialRatios()
+        self.fa = DashFundamentalAnalysis()
         self.checklist = DashChecklist()
         self.tabs = DashTabs()
 
@@ -45,6 +47,7 @@ class RegisterCallbacks:
             Input(self.x_ma.apply_crossing_ma_button, "n_clicks"),
             Input("activate-search", "data"),
             Input(self.checklist.id, "value"),
+            Input(FUNDAMENTAL_DATA_CACHE_ID, "data"),
             State("search-stock", "value"),
             State(self.x_ma.short_ma_input, "value"),
             State(self.x_ma.long_ma_input, "value"),
@@ -54,6 +57,7 @@ class RegisterCallbacks:
             _,
             __,
             checklist,
+            fundamental_data,
             search_stock,
             short_ma: int = 20,
             long_ma: int = 50,
@@ -69,12 +73,31 @@ class RegisterCallbacks:
                             search_stock, short_ma, long_ma, ma_type
                         )
                     )
-                    if df is not None:
-                        return self.strategy_x_ma.show(df), self.display
+                    if fundamental_data:
+                        try:
+                            self.financial_statement.model_validate(fundamental_data)
+                        except Exception as e_ed:
+                            logger.error(f"Error extracting earnings dates: {e_ed}")
+
+                    if df is not None and not df.is_empty():
+                        return (
+                            self.strategy_x_ma.show(df, stock=search_stock),
+                            self.display,
+                        )
+                    else:
+                        return (
+                            self.strategy_x_ma.show_no_data(stock=search_stock),
+                            self.display,
+                        )
                 except Exception as e:
                     logger.error(f"Error plotting crossing MA: {e}")
-                    return self.not_display
-            return self.not_display
+                    return (
+                        self.strategy_x_ma.show_no_data(
+                            stock=search_stock, message="ERROR FETCHING DATA"
+                        ),
+                        self.display,
+                    )
+            return self.strategy_x_ma.show_no_data(stock=""), self.display
 
     def register_best_performance_MA(self):
         @callback(
@@ -119,12 +142,29 @@ class RegisterCallbacks:
                     df = asyncio.run(
                         self.strategy_rsi.fetch_best_performance(search_stock)
                     )
-                    if df is not None:
-                        return self.strategy_rsi.show(df), self.display
+                    if df is not None and not df.is_empty():
+                        return self.strategy_rsi.show(df, stock=search_stock), self.display
+                    else:
+                        return (
+                            self.strategy_rsi.show_no_data(
+                                stock=search_stock, message="NO OPTIMIZATION DATA AVAILABLE"
+                            ),
+                            self.display,
+                        )
                 except Exception as e:
                     logger.error(f"Error plotting best performance RSI: {e}")
-                    return self.not_display
-            return self.not_display
+                    return (
+                        self.strategy_rsi.show_no_data(
+                            stock=search_stock, message="ERROR FETCHING OPTIMIZATION DATA"
+                        ),
+                        self.display,
+                    )
+            return (
+                self.strategy_rsi.show_no_data(
+                    stock="", message="NO SECURITY SELECTED"
+                ),
+                self.display,
+            )
 
     def register_RSI_plot_callback(self):
         @callback(
@@ -135,15 +175,28 @@ class RegisterCallbacks:
         )
         def plot_rsi(checklist, search_stock):
             if self.checklist.rsi_val in checklist:
-                try:
-                    df_rsi = asyncio.run(
-                        self.strategy_rsi.fetch_rsi_signal(search_stock)
-                    )
-                    if df_rsi is not None:
-                        return self.strategy_rsi.show(df_rsi), self.display
-                except Exception as e:
-                    logger.error(f"Error plotting RSI: {e}")
-                    return self.not_display
+                if search_stock:
+                    try:
+                        df_rsi = asyncio.run(
+                            self.strategy_rsi.fetch_rsi_signal(search_stock)
+                        )
+                        if df_rsi is not None and not df_rsi.is_empty():
+                            return self.strategy_rsi.show(df_rsi, stock=search_stock), self.display
+                        else:
+                            return (
+                                self.strategy_rsi.show_no_data(stock=search_stock),
+                                self.display,
+                            )
+                    except Exception as e:
+                        logger.error(f"Error plotting RSI: {e}")
+                        return (
+                            self.strategy_rsi.show_no_data(
+                                stock=search_stock, message="ERROR FETCHING RSI DATA"
+                            ),
+                            self.display,
+                        )
+                else:
+                    return self.strategy_rsi.show_no_data(stock=""), self.display
             else:
                 return self.not_display
 
@@ -156,13 +209,26 @@ class RegisterCallbacks:
         )
         def plot_bb(checklist, search_stock):
             if self.checklist.bb_val in checklist:
-                try:
-                    df_bb = asyncio.run(self.strategy_bb.fetch_bb_signal(search_stock))
-                    if df_bb is not None:
-                        return self.strategy_bb.show(df_bb), self.display
-                except Exception as e:
-                    logger.error(f"Error plotting Bollinger Bands: {e}")
-                    return self.not_display
+                if search_stock:
+                    try:
+                        df_bb = asyncio.run(self.strategy_bb.fetch_bb_signal(search_stock))
+                        if df_bb is not None and not df_bb.is_empty():
+                            return self.strategy_bb.show(df_bb, stock=search_stock), self.display
+                        else:
+                            return (
+                                self.strategy_bb.show_no_data(stock=search_stock),
+                                self.display,
+                            )
+                    except Exception as e:
+                        logger.error(f"Error plotting Bollinger Bands: {e}")
+                        return (
+                            self.strategy_bb.show_no_data(
+                                stock=search_stock, message="ERROR FETCHING BOLLINGER BANDS DATA"
+                            ),
+                            self.display,
+                        )
+                else:
+                    return self.strategy_bb.show_no_data(stock=""), self.display
             else:
                 return self.not_display
 
@@ -183,12 +249,29 @@ class RegisterCallbacks:
                     df = asyncio.run(
                         self.strategy_bb.fetch_best_performance(search_stock)
                     )
-                    if df is not None:
-                        return self.strategy_bb.show(df), self.display
+                    if df is not None and not df.is_empty():
+                        return self.strategy_bb.show(df, stock=search_stock), self.display
+                    else:
+                        return (
+                            self.strategy_bb.show_no_data(
+                                stock=search_stock, message="NO OPTIMIZATION DATA AVAILABLE"
+                            ),
+                            self.display,
+                        )
                 except Exception as e:
                     logger.error(f"Error plotting best performance BB: {e}")
-                    return self.not_display
-            return self.not_display
+                    return (
+                        self.strategy_bb.show_no_data(
+                            stock=search_stock, message="ERROR FETCHING OPTIMIZATION DATA"
+                        ),
+                        self.display,
+                    )
+            return (
+                self.strategy_bb.show_no_data(
+                    stock="", message="NO SECURITY SELECTED"
+                ),
+                self.display,
+            )
 
     def register_fundamental_balance_sheet(self):
         @callback(
@@ -254,4 +337,42 @@ class RegisterCallbacks:
                 logger.error(f"Error showing financial ratios: {e}")
                 return self.not_display
             return self.not_display
+
+    def register_fundamental_analysis_callbacks(self):
+        @callback(
+            Output(self.fa.current_ratio_val_id, "children"),
+            Output(self.fa.current_ratio_sub_id, "children"),
+            Output(self.fa.quick_ratio_val_id, "children"),
+            Output(self.fa.quick_ratio_sub_id, "children"),
+            Output(self.fa.gauge_graph_id, "figure"),
+            Output(self.fa.revenue_graph_id, "figure"),
+            Input(FUNDAMENTAL_DATA_CACHE_ID, "data"),
+            prevent_initial_call=True,
+        )
+        def update_intelligence(data):
+            if data is not None:
+                try:
+                    validated_fs = self.financial_statement.model_validate(data)
+                    lr = validated_fs.get_liquidity_ratios()
+                    cr_val = f"{lr['current_ratio']:.2f}" if lr["current_ratio"] is not None else "--"
+                    cr_sub = f"Peer Med: {lr['peer_current_ratio']:.2f}" if lr["peer_current_ratio"] is not None else "Peer Med: --"
+                    qr_val = f"{lr['quick_ratio']:.2f}" if lr["quick_ratio"] is not None else "--"
+                    qr_sub = f"Peer Med: {lr['peer_quick_ratio']:.2f}" if lr["peer_quick_ratio"] is not None else "Peer Med: --"
+
+                    gauge_fig = validated_fs.show_debt_to_equity_gauge()
+                    revenue_fig = validated_fs.show_quarterly_revenue_bars()
+
+                    return (
+                        cr_val,
+                        cr_sub,
+                        qr_val,
+                        qr_sub,
+                        gauge_fig or {},
+                        revenue_fig or {},
+                    )
+                except Exception as e:
+                    logger.error(f"Error updating SEC Intelligence: {e}")
+
+            return "--", "Peer Med: --", "--", "Peer Med: --", {}, {}
+
 

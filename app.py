@@ -1,11 +1,11 @@
 from dash import Dash, html, callback, Input, Output, State, dcc, ctx
 import dash
 import dash_bootstrap_components as dbc
-import utils
-from dash_components import RegisterCallbacks
+from dash_components import RegisterCallbacks, DashTickerTape
 from dotenv import load_dotenv
 import asyncio
 from loguru import logger
+from datetime import datetime
 
 from fundamental import FinancialStatement
 from common import FUNDAMENTAL_DATA_CACHE_ID
@@ -13,117 +13,118 @@ from utils.comm_interface import HttpComm
 
 load_dotenv()
 
-dbc_css = "https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/minty/bootstrap.min.css"
-
 app = Dash(
     title="Trust the Algorithms",
-    external_stylesheets=[dbc.themes.DARKLY, dbc_css, dbc.icons.FONT_AWESOME],
+    external_stylesheets=[dbc.themes.DARKLY, dbc.icons.FONT_AWESOME],
 )
 server = app.server
 app._favicon = "bull_icon.ico"
 
 rc = RegisterCallbacks()
+ticker_tape = DashTickerTape()
 
-app.layout = dbc.Container(
-    style={
-        "backgroundColor": utils.colors["background"],
-        "height": "100vh",
-        "overflow": "hidden",
-    },
+def _above_header():
+    """Date time at the very top."""
+    return html.Div(id="fn-datetime", className="bbg-fnbar")
+
+
+def _header():
+    """Header: bull icon + title."""
+    return html.Div([
+        html.Img(src="assets/bull_icon.png", className="bbg-bull-icon"),
+        html.H1("TRUST THE ALGORITHMS"),
+    ], className="bbg-header")
+
+
+app.layout = html.Div(
+    className="bbg-layout",
     children=[
-        dbc.Row(
-            [
-                dbc.Col(
-                    [
-                        html.Div(
-                            children=[
-                                html.Img(src="assets/bull_icon.png"),
-                            ],
-                            style={
-                                "display": "flex",
-                                "justify-content": "right",
-                            },
-                        )
-                    ],
-                    width=5,
-                ),
-                dbc.Col(
-                    [
-                        html.H1(
-                            "Trust the Algorithms",
-                            style={
-                                "textAlign": "left",
-                                "color": utils.colors["text"],
-                            },
-                        ),
-                    ],
-                    width=5,
-                ),
-            ],
-        ),
-        html.Br(),
-        dbc.Row(
-            [
-                # Side Bar
+        # ── Function-key bar ─────────────────────────────────
+        _above_header(),
+        dcc.Interval(id="interval-datetime", interval=60000),
+
+        # ── Header ───────────────────────────────────────────
+        _header(),
+
+        # ── Main content (sidebar + tabs) ────────────────────
+        html.Div(
+            className="bbg-main-content",
+            children=[
+                # Column 1: Controls Sidebar (width=2)
                 dbc.Col(
                     [
                         dbc.Card(
-                            [
-                                dbc.CardBody(
-                                    [
-                                        dbc.Col(
-                                            [
-                                                html.Div(
-                                                    [
-                                                        dbc.Input(
-                                                            id="search-stock",
-                                                            type="text",
-                                                            placeholder="Stock symbol",
-                                                            className="mb-3 mr-3 ml-1 w-50",
-                                                        ),
-                                                        dbc.Button(
-                                                            id="search-button",
-                                                            children="Search",
-                                                            target="blank",
-                                                            n_clicks=0,
-                                                            color="success",
-                                                            className="mb-3",
-                                                        ),
-                                                    ],
-                                                    style={"display": "flex"},
-                                                ),
-                                                rc.checklist.layout(),
-                                            ]
-                                        )
-                                    ],
-                                    style={
-                                        "display": "flex",
-                                        "backgroundColor": utils.colors["sidebar"],
-                                        "padding-left": "0px",
-                                    },
-                                ),
-                            ],
+                            dbc.CardBody(
+                                [
+                                    # Section: search
+                                    html.Div([
+                                        html.Div("▶ SECURITY SEARCH", className="bbg-section-label"),
+                                        html.Div([
+                                            dbc.Input(
+                                                id="search-stock",
+                                                type="text",
+                                                placeholder="Stock symbol",
+                                                className="mb-2 w-100",
+                                            ),
+                                            dbc.Button(
+                                                id="search-button",
+                                                children="Search",
+                                                n_clicks=0,
+                                                color="success",
+                                                className="w-100",
+                                            ),
+                                        ]),
+                                    ], className="bbg-sidebar-section"),
+
+                                    # Section: indicators checklist
+                                    rc.checklist.layout(),
+                                ],
+                                className="bbg-sidebar-body",
+                            ),
+                            className="bbg-sidebar-card",
                         )
                     ],
                     width=2,
+                    className="bbg-sidebar",
                 ),
-                # Main Content
+
+                # Column 2: Center Interactive Chart Panel (width=6)
                 dbc.Col(
-                    [rc.tabs.layout()],
-                    style={
-                        "maxHeight": "900px",  # Set a max height
-                        "overflowY": "auto",  # Enable vertical scrolling when needed
-                    },
-                    width=10,
+                    [
+                        rc.x_ma.layout(),
+                        rc.dash_bb.layout(),
+                        rc.dash_rsi.layout(),
+                    ],
+                    className="bbg-center-panel",
+                    width=8,
+                ),
+
+                # Column 3: Right Fundamental Analysis Intelligence Panel (width=4)
+                dbc.Col(
+                    [
+                        rc.fa.layout(),
+                        html.Div(
+                            [
+                                rc.dash_balance_sheet.layout(),
+                                rc.dash_income_statement.layout(),
+                                rc.dash_financial_ratios.layout(),
+                            ],
+                            style={"display": "none"},
+                        ),
+                    ],
+                    className="bbg-right-panel",
+                    width=2,
                 ),
             ],
-            className="gx-0",
-            style={"display": "flex"},
         ),
+        # ── Footer ticker tape ────────────────────────────────
+        ticker_tape.layout(),
+        dcc.Interval(id="interval-ticker-tape-footer", interval=60 * 60 * 1000),
+
+        # Stores
         dcc.Store(id="activate-search"),
         dcc.Store(id=FUNDAMENTAL_DATA_CACHE_ID),
     ],
-    fluid=True,
 )
 
 
@@ -136,6 +137,24 @@ def update_stock_data(_, search_stock):
     if "search-button" == ctx.triggered_id:
         return search_stock
     return dash.no_update
+
+
+@callback(
+    Output("fn-datetime", "children"),
+    Input("interval-datetime", "n_intervals"),
+)
+def update_datetime(_):
+    now = datetime.now().strftime("%a %d %b %Y  %H:%M").upper()
+    return now
+
+
+@callback(
+    Output("ticker-tape-footer", "children"),
+    Input("interval-ticker-tape-footer", "n_intervals"),
+)
+def update_ticker_tape(_):
+    data = ticker_tape.fetch_ticker_data()
+    return ticker_tape.build_ticker_children(data)
 
 
 @callback(
@@ -176,6 +195,7 @@ rc.register_BB_plot_callback()
 rc.register_best_performance_MA()
 rc.register_best_performance_RSI()
 rc.register_best_performance_BB()
+rc.register_fundamental_analysis_callbacks()
 rc.register_fundamental_balance_sheet()
 rc.register_fundamental_income_statement()
 rc.register_fundamental_ratios()
