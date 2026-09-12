@@ -1,6 +1,9 @@
 FROM debian:stable-slim@sha256:e51bfcd2226c480a5416730e0fa2c40df28b0da5ff562fc465202feeef2f1116
 
-COPY --from=ghcr.io/astral-sh/uv:0.7.3 /uv /uvx /bin/
+ARG PYTHON_VERSION=3.14.4
+
+COPY --from=ghcr.io/astral-sh/uv:0.12.13 /uv /uvx /bin/
+
 RUN groupadd -g 1001 appgroup && \
     useradd -u 1001 -G appgroup -m appuser
 USER appuser
@@ -8,7 +11,8 @@ USER appuser
 WORKDIR /app
 COPY pyproject.toml .
 COPY uv.lock .
-RUN uv python install 3.13 && \
+RUN uv python install ${PYTHON_VERSION} && \
+    uv python pin ${PYTHON_VERSION} && \
     uv sync --locked --no-cache
 
 COPY --chown=appuser:appgroup . .

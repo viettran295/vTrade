@@ -2,6 +2,8 @@
 .git
 *.tif
 *.md
+*.gif
 .ruff_cache/
 .pytest_cache/
 .vscode/
+data/
