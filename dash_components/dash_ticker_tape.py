@@ -80,7 +80,9 @@ class DashTickerTape:
 
             # Format change
             arrow = "▲" if change >= 0 else "▼"
-            change_class = "tick-up" if change >= 0 else "tick-dn"
+            change_class_base = "tick-up" if change >= 0 else "tick-dn"
+            # Flash the percent change of element if it is greater than 1%
+            change_class = f"{change_class_base} ticker-flash" if abs(change) > 1 else change_class_base
 
             items.append(
                 html.Span(

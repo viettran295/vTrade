@@ -80,3 +80,25 @@ def test_ticker_tape_scroll_animation_is_running(page, app_url):
     assert play_state == "running", (
         f"Expected animation to be running, got '{play_state}'"
     )
+
+
+def test_ticker_tape_flashing_on_percent_change_greater_than_1():
+    from dash_components.dash_ticker_tape import DashTickerTape
+    sample_data = [
+        {"symbol": "TEST_UP", "price": 100.0, "change_pct": 1.5},
+        {"symbol": "TEST_DN", "price": 100.0, "change_pct": -2.0},
+        {"symbol": "TEST_LOW", "price": 100.0, "change_pct": 0.5},
+        {"symbol": "TEST_EXACT", "price": 100.0, "change_pct": 1.0},
+    ]
+    children = DashTickerTape.build_ticker_children(sample_data)
+    inner = children[0]
+    set_a = inner.children[0]
+    items = set_a.children
+
+    # Check that change_span (children[4]) flashes only when magnitude > 1
+    assert "ticker-flash" in items[0].children[4].className
+    assert "ticker-flash" in items[1].children[4].className
+    assert "ticker-flash" not in items[2].children[4].className
+    assert "ticker-flash" not in items[3].children[4].className
+
+

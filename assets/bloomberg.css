@@ -381,6 +381,21 @@ h4 {
   font-weight: 700;
 }
 
+.ticker-flash {
+  animation: ticker-flash 2s ease-in-out infinite;
+}
+
+@keyframes ticker-flash {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.55;
+    filter: brightness(1.4);
+  }
+}
+
 @keyframes ticker-scroll {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
